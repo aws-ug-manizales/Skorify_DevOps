@@ -1,2 +1,2 @@
 # Skorify_Infraestructura
-Toda la infraestructura necesaria para desplegar la carga de trabajo Skorify a excepción de las lambdas, que estarán desplegadas directamente en el repositorio de Skorify_Backend
+Este despliegue contempla toda la infraestructura de Skorify. Las funciones Lambda quedan fuera de este alcance, ya que residen en el repositorio Skorify_Backend
