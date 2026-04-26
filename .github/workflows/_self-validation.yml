@@ -1,0 +1,25 @@
+# =============================================================================
+# Workflow: _self-validation.yml
+# Tipo: workflow propio del repo Skorify_DevOps (no es reusable)
+# Propósito: validar el propio repo de plantillas — lint de YAML, valida
+#   sintaxis de los workflows reusables, lint de markdown de los ADRs.
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — pendiente de implementación
+# =============================================================================
+#
+# Sugerencias de jobs cuando se implemente:
+# - actionlint para validar sintaxis de los workflows
+# - yamllint para los archivos pre-commit/*.yaml
+# - markdownlint para docs/adr/**/*.md
+# - verificación de que cada ADR aceptado tiene archivo + estado correcto
+
+name: self-validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# TODO: implementar jobs
+jobs: {}

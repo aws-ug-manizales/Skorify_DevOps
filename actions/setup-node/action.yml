@@ -1,0 +1,31 @@
+# =============================================================================
+# Composite action: setup-node
+# Propósito: instalar Node.js con caching consistente entre repos.
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — pendiente de implementación
+# =============================================================================
+#
+# Nota sobre package manager: Skorify_Frontend usa yarn; Skorify_Backend y
+# Skorify_Data usan pnpm. La implementación debe soportar al menos pnpm + yarn,
+# o se crean dos actions hermanas. Ver decisión cruzada en ADR-CICD-0010.
+
+name: setup-node
+description: Instala Node.js con cache habilitado para el package manager indicado.
+
+inputs:
+  node-version:
+    description: Versión de Node.js (LTS por defecto).
+    required: false
+    default: '20'
+  package-manager:
+    description: Package manager (pnpm | yarn | npm).
+    required: false
+    default: pnpm
+  # TODO: declarar inputs adicionales (working-directory, frozen-lockfile, etc.)
+
+runs:
+  using: composite
+  steps:
+    # TODO: implementar steps (actions/setup-node, pnpm/action-setup o yarn cache, cache)
+    - shell: bash
+      run: echo "TODO: implementar setup-node con package-manager=${{ inputs.package-manager }}"
