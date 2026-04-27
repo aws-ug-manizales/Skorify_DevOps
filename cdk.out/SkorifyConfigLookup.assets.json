@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "345edaad7aa22eab52af5752c8153837e97740d658ff8bd388868fe39d5e17ba": {
+      "displayName": "SkorifyConfigLookup Template",
+      "source": {
+        "path": "SkorifyConfigLookup.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "968306633562-us-east-1-b1db2d08": {
+          "bucketName": "cdk-hnb659fds-assets-968306633562-us-east-1",
+          "objectKey": "345edaad7aa22eab52af5752c8153837e97740d658ff8bd388868fe39d5e17ba.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::968306633562:role/cdk-hnb659fds-file-publishing-role-968306633562-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

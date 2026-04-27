@@ -1,0 +1,138 @@
+{
+  "/SkorifyInfra": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:33:18)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "dev"
+        },
+        {
+          "key": "ManagedBy",
+          "value": "AWS CDK"
+        },
+        {
+          "key": "Project",
+          "value": "Skorify_Infraestructura"
+        }
+      ]
+    }
+  ],
+  "/SkorifyInfra/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra/S3Storage/mikeTesting": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "bucketName": "*",
+        "removalPolicy": "retain",
+        "autoDeleteObjects": false,
+        "encryption": "S3_MANAGED",
+        "encryptionKey": "*",
+        "bucketKeyEnabled": false,
+        "enforceSSL": true,
+        "blockPublicAccess": "*",
+        "versioned": true,
+        "eventBridgeEnabled": false,
+        "objectOwnership": "BucketOwnerEnforced"
+      }
+    }
+  ],
+  "/SkorifyInfra/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra/CDKMetadata/Condition": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadataAvailable"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra/S3Storage/mikeTesting/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StoragemikeTestingB7AD4A69"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "S3Module.createBucket (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:425:20)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:143:12)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:56:3)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra/S3Storage/mikeTesting/Policy": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "bucket": "*"
+      }
+    }
+  ],
+  "/SkorifyInfra/S3Storage/mikeTesting/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StoragemikeTestingPolicy4A4DBA15"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "S3Module.createBucket (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:425:20)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:143:12)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:56:3)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ]
+}
