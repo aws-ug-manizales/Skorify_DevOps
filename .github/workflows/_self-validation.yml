@@ -1,25 +1,68 @@
-# =============================================================================
-# Workflow: _self-validation.yml
-# Tipo: workflow propio del repo Skorify_DevOps (no es reusable)
-# Propósito: validar el propio repo de plantillas — lint de YAML, valida
-#   sintaxis de los workflows reusables, lint de markdown de los ADRs.
-# Owner: equipo CI/CD — @steevensmelo
-# Estado: CASCARÓN — pendiente de implementación
-# =============================================================================
-#
-# Sugerencias de jobs cuando se implemente:
-# - actionlint para validar sintaxis de los workflows
-# - yamllint para los archivos pre-commit/*.yaml
-# - markdownlint para docs/adr/**/*.md
-# - verificación de que cada ADR aceptado tiene archivo + estado correcto
-
 name: self-validation
 
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches: [ main, develop ]
+    paths:
+      - 'actions/**'
+      - '.github/workflows/**'
+      - 'iac/**'      
+      - 'docs/adr/**' 
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'actions/**'
+      - '.github/workflows/**'
+      - 'iac/**'
+      - 'docs/adr/**'
 
-# TODO: implementar jobs
-jobs: {}
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  lint-and-security:
+    name: Repo Integrity & Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Workflow Syntax (actionlint)
+        uses: rhysd/actionlint@v1
+
+      - name: Security Scan (Trivy)
+        uses: ./actions/run-trivy
+        with:
+          scan-type: 'fs'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Lint YAML Files (yamllint)
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: 'pre-commit/*.yaml'
+          # Mantiene reglas por defecto, pero relaja line-length para tablas y enlaces largos.
+          config_data: |
+            extends: default
+            rules:
+              line-length: disable
+
+  docs-validation:
+    name: ADR Integrity & Style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Lint Markdown (ADRs)
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: 'docs/adr/**/*.md'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Verify ADR Status Consistency
+        run: python scripts/verify-adr-status.py
