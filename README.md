@@ -12,12 +12,62 @@ La metadata del stack se etiqueta con `SKORIFY_ENVIRONMENT` y, si no existe, cae
 
 ## Arquitectura
 
-El proyecto está organizado por módulos:
+```
+skorify-infraestructura/
+├── .devcontainer/
+│   ├── devcontainer.json       # Configuración del devcontainer
+│   ├── README.md              # Documentación del entorno de desarrollo
+│   └── scripts/
+│       ├── cdk-wrapper.sh     # Wrapper que valida credenciales antes de CDK
+│       └── setup-credentials.sh # Configura sesión AWS SSO
+├── .vscode/
+│   └── tasks.json             # Tareas CDK: Synth, Diff, Deploy, Destroy
+├── lib/
+│   ├── main.ts                # Stack principal de CDK
+│   ├── config/
+│   │   └── ssm-reader.ts      # Lee configuración desde SSM Parameter Store
+│   └── modules/
+│       └── s3/
+│           ├── main.ts        # Módulo dinámico para crear buckets S3
+│           └── README.md      # Documentación del módulo S3
+├── test/
+│   └── modules.test.ts        # Tests unitarios del proyecto
+├── cdk.json                   # Configuración principal de CDK
+├── cdk.context.json           # Contextos de CDK
+├── package.json               # Dependencias y scripts npm
+├── tsconfig.json              # Configuración de TypeScript
+├── jest.config.js             # Configuración de Jest para tests
+├── diagrama-infraestructura.html # Diagrama visual de la infraestructura
+├── .eslintrc.json             # Configuración de ESLint
+├── .eslintignore              # Archivos ignorados por ESLint
+├── .prettierrc                # Configuración de Prettier
+├── .prettierignore            # Archivos ignorados por Prettier
+└── .gitignore                 # Archivos ignorados por Git
+```
 
-- `lib/config/ssm-reader.ts`: lee la configuración de SSM.
-- `lib/modules/s3/`: módulo S3 dinámico, invocado desde `main.ts` con un array de definiciones.
-- `.devcontainer/`: entorno de desarrollo con AWS CLI, SSO fijo para dev y bootstrap automático.
-- `.vscode/tasks.json`: tareas CDK para `Synth`, `Diff`, `Deploy` y `Destroy`.
+### Propósito de cada archivo
+
+- **`lib/main.ts`**: Stack principal que resuelve configuración desde SSM y crea los recursos.
+- **`lib/config/ssm-reader.ts`**: Lee parámetros de AWS Systems Manager Parameter Store.
+- **`lib/modules/s3/main.ts`**: Módulo dinámico que crea buckets S3 a partir de un array de definiciones.
+- **`lib/modules/s3/README.md`**: Documentación específica del módulo S3.
+- **`.devcontainer/devcontainer.json`**: Configuración del entorno de desarrollo en contenedor.
+- **`.devcontainer/README.md`**: Documentación del entorno de desarrollo.
+- **`.devcontainer/scripts/cdk-wrapper.sh`**: Valida credenciales AWS antes de ejecutar cualquier comando CDK.
+- **`.devcontainer/scripts/setup-credentials.sh`**: Configura la sesión AWS SSO automáticamente.
+- **`.vscode/tasks.json`**: Define las tareas integradas en VS Code para operar CDK.
+- **`test/modules.test.ts`**: Tests unitarios para validar la lógica de los módulos.
+- **`cdk.json`**: Configuración principal del CDK (app, output, context).
+- **`cdk.context.json`**: Contextos específicos del CDK.
+- **`package.json`**: Dependencias npm y scripts del proyecto.
+- **`tsconfig.json`**: Configuración del compilador de TypeScript.
+- **`jest.config.js`**: Configuración del framework de testing Jest.
+- **`diagrama-infraestructura.html`**: Visualización gráfica de la infraestructura desplegada.
+- **`.eslintrc.json`**: Reglas de linting para mantener código limpio.
+- **`.eslintignore`**: Archivos excluidos del linting.
+- **`.prettierrc`**: Configuración del formateador de código Prettier.
+- **`.prettierignore`**: Archivos excluidos del formateo.
+- **`.gitignore`**: Archivos que Git debe ignorar.
 
 ### Flujo general
 
@@ -27,6 +77,22 @@ El proyecto está organizado por módulos:
 4. Si no hay sesión, ejecuta `aws sso login`.
 5. Si falta, hace `cdk bootstrap`.
 6. `main.ts` resuelve `/skorify/s3/buckets` y materializa los buckets S3 definidos.
+
+### SSO hardcodeado para ambiente dev
+
+Los valores de SSO están **hardcodeados** en `setup-credentials.sh` intencionalmente:
+
+- **SSO_START_URL**: `https://aws-users-groups-manizales.awsapps.com/start`
+- **SSO_REGION**: `us-east-1`
+- **SSO_ACCOUNT_ID**: `968306633562` (cuenta de desarrollo)
+- **SSO_ROLE_NAME**: `InfraestructuraTeam`
+
+**Razón**: El devcontainer está diseñado para trabajar **exclusivamente con el ambiente de desarrollo (dev)**. No existe configuración para cambiar de ambiente desde el contenedor — el objetivo es que los desarrolladores siempre trabajen contra la cuenta dev sin posibilidad de error al apuntar a producción por accidente.
+
+Esta decisión:
+- Previene despliegues accidentales en producción desde el entorno local.
+- Simplifica el flujo de desarrollo: al abrir el contenedor, ya se tiene la sesión correcta.
+- El script `cdk-wrapper.sh` valida credenciales antes de ejecutar cualquier comando CDK, añadiendo una capa extra de seguridad.
 
 ---
 
