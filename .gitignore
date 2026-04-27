@@ -1,0 +1,31 @@
+# Archivos de dependencias Node
+node_modules/
+npm-debug.log*
+
+# Compilados de TypeScript
+*.js
+!jest.config.js
+!*rc.js
+*.d.ts
+*.js.map
+
+# AWS CDK
+cdk.out/
+.ccdk/
+cdk.context.json
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Edición y SO
+.vscode/
+!.vscode/tasks.json
+!.vscode/extensions.json
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
