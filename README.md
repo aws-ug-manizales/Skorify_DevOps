@@ -45,6 +45,7 @@ skorify-infraestructura/
 │   ├── create-release-tag/
 │   ├── setup-aws-credentials/
 │   └── setup-node/
+│   └── CONTRIBUTING.md         # Guía de contribución
 ├── lib/                        # Código CDK (TypeScript)
 │   ├── main.ts                 # Stack principal de CDK
 │   ├── config/
@@ -70,7 +71,6 @@ skorify-infraestructura/
 ├── .prettierignore            # Archivos ignorados por Prettier
 ├── .gitignore                 # Archivos ignorados por Git
 ├── diagrama-infraestructura.html # Diagrama visual de la infraestructura
-├── CONTRIBUTING.md            # Guía de contribución
 └── README.md                  # Este archivo
 ```
 
