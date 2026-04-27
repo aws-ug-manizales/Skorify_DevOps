@@ -6,21 +6,6 @@ Repositorio centralizado del equipo DevOps/SRE del proyecto **Skorify**, platafo
 > 1. **Shared Workflows y Actions** - Reutilizables para todos los proyectos Skorify
 > 2. **Infraestructura AWS** - Implementada con AWS CDK
 
-## Estructura del repositorio
-
-```
-.
-├── .devcontainer/         # Entorno de desarrollo en contenedor
-├── .github/workflows/     # Reusable Workflows de GitHub Actions
-├── actions/               # Composite Actions reutilizables
-├── lib/                   # Código CDK (TypeScript)
-├── test/                  # Tests unitarios
-├── docs/                  # Documentación
-├── cdk.json               # Configuración de CDK
-├── package.json           # Dependencias npm
-└── tsconfig.json          # Configuración de TypeScript
-```
-
 ---
 
 ## 🌍 Ambientes
@@ -33,28 +18,110 @@ Repositorio centralizado del equipo DevOps/SRE del proyecto **Skorify**, platafo
 
 ---
 
+## Estructura del repositorio
+
+```
+skorify-infraestructura/
+├── .devcontainer/
+│   ├── devcontainer.json       # Configuración del devcontainer
+│   ├── README.md              # Documentación del entorno de desarrollo
+│   └── scripts/
+│       ├── cdk-wrapper.sh      # Wrapper que valida credenciales antes de CDK
+│       └── setup-credentials.sh # Configura sesión AWS SSO
+├── .github/
+│   ├── workflows/              # Workflows reutilizables
+│   │   ├── build-backend.yml
+│   │   ├── build-frontend.yml
+│   │   ├── deploy-backend.yml
+│   │   ├── deploy-frontend.yml
+│   │   ├── lint-backend.yml
+│   │   ├── lint-data.yml
+│   │   ├── lint-frontend.yml
+│   │   ├── sca-generic.yml
+│   │   ├── unit-tests-backend.yml
+│   │   └── unit-tests-frontend.yml
+│   └── PULL_REQUEST_TEMPLATE.md
+├── actions/                    # Composite Actions reutilizables
+│   ├── create-release-tag/
+│   ├── setup-aws-credentials/
+│   └── setup-node/
+├── lib/                        # Código CDK (TypeScript)
+│   ├── main.ts                 # Stack principal de CDK
+│   ├── config/
+│   │   └── ssm-reader.ts       # Lee configuración desde SSM Parameter Store
+│   └── modules/
+│       └── s3/
+│           ├── main.ts         # Módulo dinámico para crear buckets S3
+│           └── README.md      # Documentación del módulo S3
+├── test/
+│   └── modules.test.ts         # Tests unitarios del proyecto
+├── .vscode/
+│   ├── extensions.json         # Extensiones recomendadas
+│   └── tasks.json              # Tareas CDK: Synth, Diff, Deploy, Destroy
+├── cdk.json                    # Configuración principal de CDK
+├── cdk.context.json           # Contextos de CDK
+├── package.json               # Dependencias y scripts npm
+├── package-lock.json
+├── tsconfig.json              # Configuración de TypeScript
+├── jest.config.js             # Configuración de Jest para tests
+├── .eslintrc.json             # Configuración de ESLint
+├── .eslintignore              # Archivos ignorados por ESLint
+├── .prettierrc                # Configuración de Prettier
+├── .prettierignore            # Archivos ignorados por Prettier
+├── .gitignore                 # Archivos ignorados por Git
+├── diagrama-infraestructura.html # Diagrama visual de la infraestructura
+├── CONTRIBUTING.md            # Guía de contribución
+└── README.md                  # Este archivo
+```
+
+### Propósito de cada archivo
+
+| Archivo/Directorio | Descripción |
+|-------------------|-------------|
+| **`.devcontainer/`** | Entorno de desarrollo en contenedor. Ver [.devcontainer/README.md](.devcontainer/README.md) |
+| **`.github/workflows/`** | Workflows reutilizables que otros repositorios consumen via `workflow_call` |
+| **`actions/`** | Composite Actions atómicas para usar dentro de workflows |
+| **`lib/main.ts`** | Stack principal de CDK |
+| **`lib/config/ssm-reader.ts`** | Lee configuración desde AWS Parameter Store |
+| **`lib/modules/s3/`** | Módulo para crear buckets S3 dinámicamente. Ver [lib/modules/s3/README.md](lib/modules/s3/README.md) |
+| **`test/modules.test.ts`** | Tests unitarios del proyecto |
+| **`.vscode/tasks.json`** | Define las tareas integradas en VS Code para operar CDK |
+| **`cdk.json`** | Configuración principal del CDK (app, output, context) |
+| **`package.json`** | Dependencias npm y scripts del proyecto |
+| **`tsconfig.json`** | Configuración del compilador de TypeScript |
+| **`jest.config.js`** | Configuración del framework de testing Jest |
+| **`.eslintrc.json`** | Reglas de linting para mantener código limpio |
+| **`.prettierrc`** | Configuración del formateador de código Prettier |
+| **`diagrama-infraestructura.html`** | Visualización gráfica de la infraestructura desplegada |
+| **`CONTRIBUTING.md`** | Guía de contribución al proyecto |
+
+---
+
+## 🚀 Uso del Developer Container
+
+Todo el desarrollo se realiza dentro del **Dev Container**. Esto asegura que todos los colaboradores tengan el mismo entorno de desarrollo configurado automáticamente.
+
+### Requisitos previos
+
+- [Docker](https://www.docker.com/) instalado
+- [VS Code](https://code.visualstudio.com/) con extensión [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+### Cómo abrir el proyecto
+
+1. Abre este repositorio en VS Code
+2. VS Code detectará automáticamente la configuración del devcontainer
+3. Haz clic en **"Reopen in Container"** cuando se solicite
+4. El contenedor se construirá y configurará automáticamente
+
+> Para más detalles sobre el flujo de desarrollo, credenciales AWS y comandos disponibles, consulta [.devcontainer/README.md](.devcontainer/README.md).
+
+---
+
 ## ☁️ AWS CDK - Infraestructura
 
-El stack principal vive en `lib/main.ts`, lee configuración desde AWS Systems Manager Parameter Store y hoy consume solo:
+El stack principal vive en `lib/main.ts`, lee configuración desde AWS Systems Manager Parameter Store.
 
-- `/skorify/s3/buckets`
-
-La metadata del stack se etiqueta con `SKORIFY_ENVIRONMENT` y, si no existe, cae en `dev`. El `stackName` físico se mantiene fijo como `skorify-infra`.
-
-### Arquitectura CDK
-
-```
-lib/
-├── main.ts                # Stack principal de CDK
-├── config/
-│   └── ssm-reader.ts      # Lee configuración desde SSM Parameter Store
-└── modules/
-    └── s3/
-        ├── main.ts        # Módulo dinámico para crear buckets S3
-        └── README.md      # Documentación del módulo S3
-```
-
-### Comandos CDK
+### Comandos CDK (disponibles en el devcontainer)
 
 | Comando | Descripción |
 |---------|-------------|
@@ -63,88 +130,7 @@ lib/
 | `🚀 CDK: Deploy` | Despliega la infraestructura |
 | `💣 CDK: Destroy` | Elimina los recursos |
 
-### Configuración de buckets S3
-
-Los buckets se definen en AWS Parameter Store como JSON:
-
-```json
-[
-  {
-    "logicalName": "AccessLogs",
-    "bucketName": "skorify-access-logs",
-    "versioned": true,
-    "encryptionType": "S3_MANAGED",
-    "isLogsBucket": true,
-    "expirationDays": 180,
-    "removalPolicy": "RETAIN"
-  }
-]
-```
-
-Parámetros en SSM:
-- `/skorify/s3/buckets` → JSON array de definiciones de buckets
-
----
-
-## 🔄 GitHub Actions - Shared Workflows
-
-Workflows reutilizables que los repositorios de Frontend, Backend y Datos consumen via `workflow_call`. Convencion de nombrado: `stage-componente.yml`.
-
-**Uso desde un repo consumidor:**
-
-```yaml
-jobs:
-  lint:
-    uses: skorify-org/skorify-shared-workflows/.github/workflows/lint--frontend.yml@v1
-    with:
-      node-version: '20'
-    secrets: inherit
-```
-
-### `actions/` - Composite Actions
-
-Pasos atomicos reutilizables que se usan dentro de los workflows (setup de Node, credenciales AWS, notificaciones, etc).
-
-**Uso:**
-
-```yaml
-steps:
-  - uses: skorify-org/skorify-shared-workflows/actions/setup-node@v1
-    with:
-      node-version: '20'
-```
-
----
-
-## 🛠️ Desarrollo
-
-### Requisitos
-
-- Node.js 18+
-- AWS CDK CLI (`npm install -g aws-cdk`)
-- AWS CLI configurado con SSO
-
-### Configuración local
-
-1. Clonar el repositorio
-2. Ejecutar `npm install`
-3. Configurar credenciales AWS: `aws sso login --profile skorify-dev`
-4. Ejecutar `npx cdk synth` para verificar
-
-### Tests
-
-```bash
-npm test
-```
-
----
-
-## 📚 Documentación
-
-- [Dev Container](.devcontainer/README.md) - Entorno de desarrollo
-- [Módulo S3](lib/modules/s3/README.md) - Documentación del módulo de almacenamiento
-- [Contribuir](docs/contributing.md) - Guía de contribución
-- [Workflows](docs/workflows-usage.md) - Uso de workflows
+> **Nota**: La documentación del módulo S3 está disponible en [lib/modules/s3/README.md](lib/modules/s3/README.md).
 
 ---
 
