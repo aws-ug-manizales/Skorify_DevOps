@@ -5,11 +5,15 @@ on:
                                                                                                      
 jobs:                                                                                                          
   sca-scan:                                                                                                                                   
-    runs-on: ubuntu-latest                                                                                              
+    runs-on: ubuntu-latest
+
+    container:                                                                                                                                   
+      image: aquasec/trivy:0.70.0
+      options: --entrypoint /bin/sh
+                                                                                     
     steps:                                                                                                                             
       - name: Checkout del código
         uses: actions/checkout@v4       
 
-      - name: Listar archivos del repositorio                                      
-        run: ls -la
-        
+      - name: Ejecutar Trivy para escaneo de vulnerabilidades                                
+        run: trivy repo --scanners vuln,secret,misconfig .
