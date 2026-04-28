@@ -1,0 +1,15 @@
+name: "Shared: SCA - Escaneo de vulnerabilidades"                                  
+                                                                                                                                            
+on:                                                                                
+  workflow_call:                                                                   
+                                                                                                     
+jobs:                                                                                                          
+  sca-scan:                                                                                                                                   
+    runs-on: ubuntu-latest                                                                                              
+    steps:                                                                                                                             
+      - name: Checkout del código
+        uses: actions/checkout@v4       
+
+      - name: Listar archivos del repositorio                                      
+        run: ls -la
+        
