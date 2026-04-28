@@ -13,7 +13,13 @@ jobs:
                                                                                      
     steps:                                                                                                                             
       - name: Checkout del código
-        uses: actions/checkout@v4       
+        uses: actions/checkout@v4
+
+      - name: Instalar nodejs y npm
+        run: apk add --no-cache nodejs npm
+
+      - name: Instalar dependencias Node.js                                                      
+        run: npm ci
 
       - name: Ejecutar Trivy para escaneo de vulnerabilidades                                
-        run: trivy repo --scanners vuln,secret,misconfig .
+        run: trivy fs --scanners vuln,secret,misconfig .
