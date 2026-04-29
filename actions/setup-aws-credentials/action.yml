@@ -1,0 +1,53 @@
+name: 'Setup AWS Credentials'
+description: 'Configura credenciales de AWS y herramientas comunes'
+
+inputs:
+  aws-access-key-id:
+    description: 'AWS Access Key ID'
+    required: true
+  aws-secret-access-key:
+    description: 'AWS Secret Access Key'
+    required: true
+  aws-region:
+    description: 'Región de AWS'
+    required: false
+    default: 'us-east-1'
+  role-to-assume:
+    description: 'ARN del rol a asumir (opcional)'
+    required: false
+    default: ''
+  environment:
+    description: 'Entorno (dev, staging, prod)'
+    required: false
+    default: 'dev'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        role-to-assume: ${{ inputs.role-to-assume }}
+        role-session-name: github-actions-${{ inputs.environment }}
+    
+    - name: Install AWS CLI tools (if needed)
+      shell: bash
+      run: |
+        if ! command -v aws &> /dev/null; then
+          echo "AWS CLI not found, installing..."
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          sudo ./aws/install
+          rm -rf aws awscliv2.zip
+        fi
+        aws --version
+    
+    - name: Verify AWS identity
+      shell: bash
+      run: |
+        echo "AWS Account: $(aws sts get-caller-identity --query Account --output text)"
+        echo "AWS Region: ${{ inputs.aws-region }}"
+        echo "Environment: ${{ inputs.environment }}"
