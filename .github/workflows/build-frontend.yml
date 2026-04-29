@@ -1,0 +1,45 @@
+name: Reusable - Build Frontend
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        default: '22'
+        type: string
+    secrets:
+      NEXT_PUBLIC_API_URL:
+        required: false
+
+jobs:
+  build:
+    name: Build de Producción
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Descargar código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: 📦 Habilitar Corepack
+        run: corepack enable
+
+      - name: 📦 Instalar dependencias
+        run: yarn install --frozen-lockfile
+
+      - name: 🔷 Verificar tipos TypeScript
+        run: npx tsc --noEmit
+
+      - name: 🏗️ Build de producción
+        run: yarn build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
