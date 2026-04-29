@@ -1,11 +1,6 @@
 name: Reusable - Build Frontend
 
 on:
-  pull_request:
-    branches:
-      - main
-      - develop
-
   workflow_call:
     inputs:
       node-version:
@@ -43,4 +38,3 @@ jobs:
         run: yarn build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          
