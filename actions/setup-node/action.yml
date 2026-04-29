@@ -1,0 +1,41 @@
+name: 'Setup Node.js with Cache'
+description: 'Configura Node.js, instala dependencias y configura caché para Yarn'
+
+inputs:
+  node-version:
+    description: 'Versión de Node.js a usar'
+    required: false
+    default: '18'
+  working-directory:
+    description: 'Directorio donde está el package.json'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'yarn'
+        cache-dependency-path: ${{ inputs.working-directory }}/yarn.lock
+    
+    - name: Get yarn cache directory
+      id: yarn-cache-dir
+      shell: bash
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      working-directory: ${{ inputs.working-directory }}
+    
+    - name: Cache yarn dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.yarn-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles(format('{0}/yarn.lock', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+    
+    - name: Install dependencies
+      shell: bash
+      run: yarn install --frozen-lockfile
+      working-directory: ${{ inputs.working-directory }}
