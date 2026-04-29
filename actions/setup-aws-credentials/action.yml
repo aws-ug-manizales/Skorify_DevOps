@@ -1,0 +1,29 @@
+# =============================================================================
+# Composite action: setup-aws-credentials
+# Propósito: configurar credenciales AWS vía OIDC para el ambiente especificado.
+# Owner: equipo CI/CD — @steevensmelo (con revisión de Infra para los roles)
+# Estado: CASCARÓN — pendiente de implementación
+# =============================================================================
+#
+# Referencia: ADR-INFRA-0005 (autenticación GitHub→AWS vía OIDC).
+# Decisión sensible: requiere aprobación de los 3 líderes (toca IAM).
+
+name: setup-aws-credentials
+description: Configura credenciales temporales AWS vía OIDC para un ambiente.
+
+inputs:
+  environment:
+    description: Ambiente destino (dev, stg, prd).
+    required: true
+  aws-region:
+    description: Región AWS.
+    required: false
+    default: us-east-1
+  # TODO: declarar input role-to-assume o resolverlo desde environment
+
+runs:
+  using: composite
+  steps:
+    # TODO: implementar (aws-actions/configure-aws-credentials con role-to-assume)
+    - shell: bash
+      run: echo "TODO: implementar setup-aws-credentials para ${{ inputs.environment }}"
