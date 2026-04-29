@@ -1,0 +1,146 @@
+name: 'Create Release Tag'
+description: 'Crea un tag semántico automáticamente basado en conventional commits'
+
+inputs:
+  github-token:
+    description: 'GitHub Token para crear tags'
+    required: true
+    default: ${{ github.token }}
+  branch:
+    description: 'Rama base para crear el tag'
+    required: false
+    default: 'main'
+  prefix:
+    description: 'Prefijo del tag (ej: v, release/)'
+    required: false
+    default: 'v'
+  major-minor-only:
+    description: 'Solo crear tags major.minor (sin patch)'
+    required: false
+    default: 'false'
+
+outputs:
+  tag:
+    description: 'Tag creado'
+    value: ${{ steps.create-tag.outputs.tag }}
+  version:
+    description: 'Versión numérica sin prefijo'
+    value: ${{ steps.create-tag.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ inputs.github-token }}
+    
+    - name: Get latest tag
+      id: latest-tag
+      shell: bash
+      run: |
+        # Obtener el último tag que coincida con el prefijo
+        LATEST_TAG=$(git tag -l "${{ inputs.prefix }}*" | sort -V | tail -n1)
+        
+        if [ -z "$LATEST_TAG" ]; then
+          echo "No existing tags found, starting from 0.0.0"
+          echo "tag=0.0.0" >> $GITHUB_OUTPUT
+          echo "major=0" >> $GITHUB_OUTPUT
+          echo "minor=0" >> $GITHUB_OUTPUT
+          echo "patch=0" >> $GITHUB_OUTPUT
+        else
+          # Remover prefijo para obtener la versión numérica
+          VERSION=${LATEST_TAG#${{ inputs.prefix }}}
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$(echo $VERSION | cut -d. -f1)" >> $GITHUB_OUTPUT
+          echo "minor=$(echo $VERSION | cut -d. -f2)" >> $GITHUB_OUTPUT
+          echo "patch=$(echo $VERSION | cut -d. -f3)" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Latest tag: $LATEST_TAG"
+    
+    - name: Determine next version
+      id: next-version
+      shell: bash
+      run: |
+        MAJOR=${{ steps.latest-tag.outputs.major }}
+        MINOR=${{ steps.latest-tag.outputs.minor }}
+        PATCH=${{ steps.latest-tag.outputs.patch }}
+        
+        # Analizar conventional commits desde el último tag
+        COMMITS=$(git log ${{ inputs.prefix }}${{ steps.latest-tag.outputs.tag }}..HEAD --pretty=format:"%s")
+        
+        # Detectar tipos de cambios
+        if echo "$COMMITS" | grep -q "^feat!" || echo "$COMMITS" | grep -q "^fix!"; then
+          # Breaking change
+          MAJOR=$((MAJOR + 1))
+          MINOR=0
+          PATCH=0
+          echo "type=breaking" >> $GITHUB_OUTPUT
+        elif echo "$COMMITS" | grep -q "^feat"; then
+          # Nueva feature
+          MINOR=$((MINOR + 1))
+          PATCH=0
+          echo "type=feature" >> $GITHUB_OUTPUT
+        elif echo "$COMMITS" | grep -q "^fix"; then
+          # Bug fix
+          PATCH=$((PATCH + 1))
+          echo "type=fix" >> $GITHUB_OUTPUT
+        else
+          # Otros cambios (docs, chore, etc.) - no crear tag
+          echo "type=none" >> $GITHUB_OUTPUT
+          echo "skip=true" >> $GITHUB_OUTPUT
+        fi
+        
+        if [ "${{ inputs.major-minor-only }}" = "true" ]; then
+          NEW_VERSION="$MAJOR.$MINOR"
+        else
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        fi
+        
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "New version: $NEW_VERSION"
+    
+    - name: Create and push tag
+      id: create-tag
+      if: steps.next-version.outputs.skip != 'true'
+      shell: bash
+      run: |
+        TAG_NAME="${{ inputs.prefix }}${{ steps.next-version.outputs.version }}"
+        
+        # Configurar git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Crear tag
+        git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+        git push origin "$TAG_NAME"
+        
+        echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "version=${{ steps.next-version.outputs.version }}" >> $GITHUB_OUTPUT
+        echo "Created tag: $TAG_NAME"
+    
+    - name: Skip tag creation
+      if: steps.next-version.outputs.skip == 'true'
+      shell: bash
+      run: |
+        echo "Skipping tag creation - no version bump needed"
+        echo "tag=${{ inputs.prefix }}${{ steps.latest-tag.outputs.tag }}" >> $GITHUB_OUTPUT
+        echo "version=${{ steps.latest-tag.outputs.tag }}" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release (optional)
+      if: steps.next-version.outputs.skip != 'true'
+      shell: bash
+      run: |
+        # Generar changelog
+        CHANGELOG=$(git log ${{ inputs.prefix }}${{ steps.latest-tag.outputs.tag }}..HEAD --pretty=format:"- %s" --reverse)
+        
+        # Crear release usando GitHub CLI
+        gh release create "${{ steps.create-tag.outputs.tag }}" \
+          --title "Release ${{ steps.create-tag.outputs.tag }}" \
+          --notes "$CHANGELOG" \
+          --target ${{ inputs.branch }} \
+          || echo "Failed to create release, maybe gh CLI not available"
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
