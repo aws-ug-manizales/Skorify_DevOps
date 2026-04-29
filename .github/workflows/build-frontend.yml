@@ -43,3 +43,4 @@ jobs:
         run: yarn build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          
