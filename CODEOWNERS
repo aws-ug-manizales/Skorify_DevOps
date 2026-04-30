@@ -1,0 +1,37 @@
+# CODEOWNERS — Skorify_DevOps
+#
+# Sintaxis: <patrón> <usuario o equipo>
+# Documentación oficial: buscar "About code owners" en docs.github.com
+#
+# Nota: este archivo usa handles individuales de los líderes de área.
+# Cuando se creen equipos (teams) dentro de la org `aws-ug-manizales`,
+# se pueden reemplazar estos handles por las referencias de equipo
+# (por ejemplo, @aws-ug-manizales/devops-cicd-leads) para incluir a
+# todo el subgrupo, no solo al líder.
+
+# Por defecto, cualquier cambio requiere aprobación del coordinador general
+*                                   @edisoncast
+
+# CI/CD — líder: Steevens Castañeda
+/.github/workflows/                 @steevensmelo
+/actions/                           @steevensmelo
+/pre-commit/                        @steevensmelo
+/docs/adr/ci-cd/                    @steevensmelo
+/docs/contributing.md               @steevensmelo
+
+# Infra — líder: Mateo Marín
+/iac/                               @Mateo454
+/docs/adr/infra/                    @Mateo454
+
+# SRE — líder: Michael Rivera
+/sre/                               @lmichaelrc
+/docs/adr/sre/                      @lmichaelrc
+
+# Onboarding y scripts — compartidos entre áreas
+/docs/onboarding/                   @steevensmelo @Mateo454
+/scripts/                           @steevensmelo @Mateo454 @lmichaelrc
+
+# ADRs generales y temas sensibles (IAM, OIDC, red, secretos, audit logs) requieren los tres líderes
+/docs/adr/0001-*                    @steevensmelo @Mateo454 @lmichaelrc
+/docs/adr/0002-*                    @steevensmelo @Mateo454 @lmichaelrc
+/docs/adr/0003-*                    @steevensmelo @Mateo454 @lmichaelrc

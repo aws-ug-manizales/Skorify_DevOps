@@ -1,0 +1,17 @@
+# =============================================================================
+# Configuración de pre-commit para Skorify_Data
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — DESBLOQUEADO (stack confirmado por auditoría 2026-04-26)
+# =============================================================================
+#
+# Stack confirmado tras auditoría: Skorify_Data es Node.js + TypeScript + pnpm
+# (no Python). Referencia: ADR-INFRA-0008.
+#
+# ATENCIÓN: ver ADR-CICD-0010 (Husky vs framework `pre-commit`). La elección
+# de herramienta no está cerrada. Data no tiene ningún hook hoy.
+#
+# Hooks esperados cuando se implemente (ESLint+Prettier+commitlint+gitleaks
+# si se elige Husky/lint-staged; o equivalentes si se elige `pre-commit`).
+
+repos: []
+# TODO: implementar hooks (mismos que backend dado que stack es Node + TypeScript)
