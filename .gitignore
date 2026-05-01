@@ -44,3 +44,6 @@ temp/
 # AWS CDK
 cdk.out/
 .ccdk/
+
+# TypeScript build output
+dist/
