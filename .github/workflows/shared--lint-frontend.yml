@@ -1,0 +1,50 @@
+name: "Shared: Lint Frontend"
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Version de Node.js a utilizar'
+        required: false
+        default: '22'
+        type: string
+
+      working-directory:
+        description: 'Directorio donde se encuentra el package.json del proyecto'
+        required: false
+        default: '.'
+        type: string
+
+jobs:
+  lint:
+    name: ESLint + Prettier + TypeScript
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: ESLint
+        run: npx eslint . --max-warnings 0
+
+      - name: Prettier (formato)
+        if: always()
+        run: npx prettier --check .
+
+      - name: TypeScript (chequeo de tipos)
+        if: always()
+        run: npx tsc --noEmit

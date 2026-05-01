@@ -13,7 +13,7 @@ jobs:
                                                                                      
     steps:                                                                                                                             
       - name: Checkout del código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Ejecutar Trivy para escaneo de vulnerabilidades                                
         run: trivy fs --scanners vuln,secret,misconfig .
