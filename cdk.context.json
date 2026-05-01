@@ -1,0 +1,3 @@
+{
+  "ssm:account=968306633562:parameterName=/skorify/s3/buckets:region=us-east-1": "[\n  {\n    \"logicalName\": \"mikeTesting\",\n    \"bucketName\": \"skorify-dev-michael-test\",\n    \"versioned\": true,\n    \"encryptionType\": \"S3_MANAGED\",\n    \"removalPolicy\": \"RETAIN\"\n  }\n]"
+}
