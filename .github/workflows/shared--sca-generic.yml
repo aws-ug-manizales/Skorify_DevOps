@@ -16,4 +16,4 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Ejecutar Trivy para escaneo de vulnerabilidades                                
-        run: trivy fs --scanners vuln,secret,misconfig .
+        run: trivy fs --scanners vuln,secret,misconfig --exit-code 1 .
