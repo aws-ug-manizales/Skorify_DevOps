@@ -4,7 +4,8 @@ on:
   workflow_call:                                                                   
                                                                                                      
 jobs:                                                                                                          
-  sca-scan:                                                                                                                                   
+  sca-scan:
+    name: Escaneo de vulnerabilidades con Trivy
     runs-on: ubuntu-latest
 
     container:                                                                                                                                   
