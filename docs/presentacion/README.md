@@ -122,7 +122,7 @@ Coherente 1:1 con [`Pagina_Web/css/styles.css`](../../../Pagina_Web/css/styles.c
 | 8 | CI ya tiene código · Trivy SCA | II |
 | 9 | CD · cuando el merge se vuelve deploy | II |
 | 10 | Infraestructura · AWS con CDK + SAM | II |
-| 11 | Tres ambientes · una sola cuenta | II |
+| 11 | Tres ambientes · tres cuentas | II |
 | 12 | SRE · Datadog | II |
 | 13 | Infraestructura ya tiene código · módulo S3 | III · Lo construido |
 | 14 | Devcontainer · onboarding en 5 minutos | III |
