@@ -8,9 +8,9 @@
 
 ## Contexto
 
-Tres ambientes en una sola cuenta AWS (ver ADR-INFRA-0002) hacen indispensable un estándar de tagging y naming para distinguir recursos por ambiente, atribuir costos y aplicar políticas IAM con condiciones por tag.
+Una cuenta AWS por ambiente bajo la OU `Skorify` (ver ADR-INFRA-0002) hace que la frontera entre DEV, STG y PROD sea la frontera de cuenta. Sin embargo, sigue siendo indispensable un estándar de tagging y naming dentro de cada cuenta para distinguir recursos por servicio, dominio y owner; atribuir costos por dimensiones cruzadas en el roll-up de Cost Explorer en master; y mantener consistencia entre cuentas.
 
-Sin estándar, los recursos se mezclan, los reportes de Cost Explorer son inutilizables y los IAM roles no pueden restringirse correctamente.
+Sin estándar, los recursos se mezclan dentro de cada cuenta, los reportes de Cost Explorer cruzados se vuelven inutilizables y los IAM roles dentro de una cuenta no pueden restringirse a recursos por dominio.
 
 Tags candidatas (a definir por el equipo):
 
