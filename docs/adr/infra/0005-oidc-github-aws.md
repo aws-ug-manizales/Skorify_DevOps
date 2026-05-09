@@ -4,7 +4,7 @@
 - **Fecha**: 2026-05-09
 - **Área**: Infra
 - **Autores**: @edisoncast, @Mateo454
-- **Aprobadores**: @steevensmelo (CI/CD), @Mateo454 (Infra), @lmichaelrc (SRE) — los tres líderes, por tratarse de un ADR sensible que toca IAM
+- **Aprobadores**: @steevensmelo (CI/CD), @Mateo454 (Infra), @lmichaelrc (SRE). Requiere los tres líderes por tratarse de un ADR sensible que toca IAM.
 
 ## Contexto
 

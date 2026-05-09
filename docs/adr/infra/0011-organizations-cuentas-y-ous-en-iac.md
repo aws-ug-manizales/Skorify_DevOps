@@ -4,11 +4,11 @@
 - **Fecha**: 2026-05-09
 - **Área**: Infra
 - **Autores**: @edisoncast, @Mateo454
-- **Aprobadores**: @steevensmelo (CI/CD), @Mateo454 (Infra), @lmichaelrc (SRE) — los tres líderes, por tratarse de un ADR fundacional que toca la base de la plataforma
+- **Aprobadores**: @steevensmelo (CI/CD), @Mateo454 (Infra), @lmichaelrc (SRE). Requiere los tres líderes por tratarse de un ADR fundacional que toca la base de la plataforma.
 
 ## Contexto
 
-El principio operativo del equipo es **"todo en IaC, no ClickOps"**. Sin embargo, el activo más fundacional de la plataforma (la `Organization o-y5zmep6ibt`, su única OU `Skorify` y las 4 cuentas que la integran — 1 de gestión + 3 workload) **no está en código**. Una búsqueda en los repos `Skorify_DevOps`, `Skorify_Backend`, `Skorify_Frontend`, `Skorify_Data` y `Pagina_Web` no encuentra ningún `AWS::Organizations::Account`, `AWS::Organizations::OrganizationalUnit`, `CfnAccount`, `CfnOrganizationalUnit` ni equivalente. Las únicas referencias a IDs de cuenta aparecen en `cdk.context.json` (cache autogenerado por CDK) y `.devcontainer/README.md` (texto onboarding).
+El principio operativo del equipo es **"todo en IaC, no ClickOps"**. Sin embargo, el activo más fundacional de la plataforma (la `Organization o-y5zmep6ibt`, su única OU `Skorify` y las 4 cuentas que la integran: 1 de gestión y 3 workload) **no está en código**. Una búsqueda en los repos `Skorify_DevOps`, `Skorify_Backend`, `Skorify_Frontend`, `Skorify_Data` y `Pagina_Web` no encuentra ningún `AWS::Organizations::Account`, `AWS::Organizations::OrganizationalUnit`, `CfnAccount`, `CfnOrganizationalUnit` ni equivalente. Las únicas referencias a IDs de cuenta aparecen en `cdk.context.json` (cache autogenerado por CDK) y `.devcontainer/README.md` (texto onboarding).
 
 Una auditoría con CloudTrail (`lookup-events` en `us-east-1`, donde se loguean los eventos globales de Organizations) confirma cómo se llegó al estado actual:
 
@@ -64,7 +64,7 @@ Mover la `Organization`, sus OUs y sus cuentas a IaC en `Skorify_DevOps`, con CD
    - **Crear cuenta**: PR al módulo `organizations/`, aprobación de los tres líderes, `cdk deploy` desde master.
    - **Renombrar cuenta o mover de OU**: PR al módulo, deploy.
    - **Cerrar cuenta**: `aws organizations close-account` o consola de Organizations. Esto cambia su estado a `SUSPENDED` 90 días antes del cierre definitivo. **Es una operación de Organizations, no de CloudFormation**.
-   - **Remover del stack** (sin cerrar): `AWS::Organizations::Account` tiene `DeletionPolicy: Retain` por defecto, así que retirar el recurso del template solo lo desasocia del stack — la cuenta sigue viva en la organización. PR al módulo removiendo el `CfnAccount`, deploy.
+   - **Remover del stack** (sin cerrar): `AWS::Organizations::Account` tiene `DeletionPolicy: Retain` por defecto, así que retirar el recurso del template solo lo desasocia del stack. La cuenta sigue viva en la organización. PR al módulo removiendo el `CfnAccount`, deploy.
    - **Flujo recomendado para descomisionar una cuenta**: primero cerrar con `close-account` y validar el `SUSPENDED`; después PR removiendo el recurso del template. El orden inverso también funciona pero deja un período donde la cuenta existe sin gestión IaC.
    - **Prohibido**: cambios manuales por consola sobre Org/OUs/cuentas (excepto cierre, donde la consola es alternativa válida a la API). Si se detecta drift, se reconcilia con un PR.
 
@@ -73,6 +73,11 @@ Mover la `Organization`, sus OUs y sus cuentas a IaC en `Skorify_DevOps`, con CD
 7. **Detección de drift**: agregar al runbook un comando `aws organizations describe-organization` y `aws organizations list-accounts` que compare contra el output del `cdk synth`. Sin automatización de detección por ahora: el equipo lo corre periódicamente.
 
 8. **CDK app refactor**: el `lib/main.ts` actual ya soporta múltiples ambientes vía `SKORIFY_ENVIRONMENT`. Este ADR agrega `SkorifyOrganizationStack` como un stack independiente que solo se materializa cuando `CDK_DEFAULT_ACCOUNT === '746669207643'` (master).
+
+9. **Restricciones de AWS Organizations aplicadas al template**:
+   - **`RoleName` es inmutable** en `AWS::Organizations::Account`. AWS lo trata como create-only: declararlo en una cuenta existente hace fallar el update con `"You cannot update IAM role name."` aunque el valor sea idéntico al actual. El módulo solo emite `roleName` para cuentas con `existing: false`. En cuentas importadas, se omite siempre, en cualquier fase.
+   - **`Tags` y `RoleArn` no se aceptan durante `cdk import`**. CFN rechaza el changeset con `"As part of the import operation, you cannot modify or add [RoleArn, Tags]"`. Para esto el módulo expone la prop `forImport: boolean`, que el helper `maybeCreateSkorifyOrganizationStack` setea a `true` cuando `SKORIFY_ORG_IMPORT_PHASE=true`. En esa fase también se omiten los stack-level tags.
+   - **Master sí necesita `cdk bootstrap`**, contrario a una afirmación previa de este ADR. Cualquier stack con `DefaultStackSynthesizer` (default en CDK v2) referencia el SSM parameter `/cdk-bootstrap/hnb659fds/version` aunque no haya assets. El runbook documenta que `cdk bootstrap aws://746669207643/us-east-1` se corre una vez antes de la fase 1.
 
 ## Consecuencias
 
@@ -89,7 +94,7 @@ Mover la `Organization`, sus OUs y sus cuentas a IaC en `Skorify_DevOps`, con CD
 
 ### Negativos
 
-- **CloudFormation no cierra cuentas**: `AWS::Organizations::Account` tiene `DeletionPolicy: Retain` por defecto, así que remover el recurso del template solo lo desasocia del stack — no toca la cuenta real. Cerrar la cuenta es una operación aparte de Organizations (`aws organizations close-account` o consola). Es una característica intencional, no una limitación, pero hay que tenerla presente para no confundir "limpieza de stack" con "cierre de cuenta".
+- **CloudFormation no cierra cuentas**: `AWS::Organizations::Account` tiene `DeletionPolicy: Retain` por defecto, así que remover el recurso del template solo lo desasocia del stack y no toca la cuenta real. Cerrar la cuenta es una operación aparte de Organizations (`aws organizations close-account` o consola). Es una característica intencional, no una limitación, pero hay que tenerla presente para no confundir "limpieza de stack" con "cierre de cuenta".
 - **`cdk import` es manual y delicado**: hay que importar cada `CfnAccount` y la `CfnOrganizationalUnit` con sus IDs reales, en el orden correcto, validando con `cdk diff` antes de `cdk deploy`. Un error puede dejar el stack en estado inconsistente.
 - **La cuenta master no se modela como `CfnAccount`** (ver Decisión, punto 1). Si por error se agrega como recurso del template, el `CfnAccount` queda apuntando a la cuenta de gestión y la `DeletionPolicy: Retain` evita el daño en remoción, pero el stack queda inconsistente con la realidad de Organizations. La protección es no agregarla en primer lugar.
 - **Más overhead administrativo para cambios pequeños**: agregar una cuenta deja de ser un click, pasa a ser un PR.
@@ -100,6 +105,7 @@ Mover la `Organization`, sus OUs y sus cuentas a IaC en `Skorify_DevOps`, con CD
 - **Email único por cuenta**: AWS exige email único; si se cierra una cuenta y se quiere reusar el email, hay que esperar 90 días tras el cierre. Se documenta para no caer en errores de planning.
 - **Cuenta de gestión**: la cuenta de gestión ya existía antes de la Organization y fue la que ejecutó `CreateOrganization`; al hacerlo pasa a ser la cuenta master por construcción ([doc `CreateOrganization`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganization.html)). CDK la representa como contexto del Organization, no como `CfnAccount`. Cuidado en el módulo: la cuenta de gestión no se importa como `CfnAccount` para no romper el binding del Organization.
 - **Latencia de Organizations**: las APIs de Organizations son lentas (un `CreateAccount` puede tardar minutos). Esperarlo en `cdk deploy` es normal; documentarlo en el runbook.
+- **Riesgo de cuenta huérfana**: `CreateAccount` es asíncrono al backend de Organizations. Si CFN inicia rollback antes de recibir confirmación (por ejemplo, otro recurso del changeset falla), Organizations puede terminar de crear la cuenta de todos modos. La cuenta queda activa pero fuera del stack, y el siguiente `cdk deploy` falla con `Account with email [...] already exists`. Recovery: importarla en un siguiente `cdk import` y marcarla `existing: true` en `lib/config/organizations-config.ts`. Procedimiento detallado en el runbook.
 - **Riesgo de SCPs amplias**: una SCP mal escrita puede dejar bloqueada la cuenta master o todos los workloads. `aws organizations attach-policy` no tiene `--dry-run`, así que la validación es por aislamiento, no por simulación: probar primero adjuntando la policy a una OU sandbox (o a una cuenta no crítica fuera de la OU `Skorify`), validar el efecto desde una identidad IAM dentro de esa cuenta, y solo después adjuntar a `Skorify`.
 
 ## Notas adicionales

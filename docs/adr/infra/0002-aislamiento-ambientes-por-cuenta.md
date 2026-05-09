@@ -11,7 +11,7 @@
 
 El borrador inicial de este ADR asumía **una sola cuenta AWS** para los tres ambientes (DEV, STG, PROD), como restricción presupuestaria del proyecto comunitario. Esa premisa quedó invalidada al revisar el estado real de la organización.
 
-Una auditoría con `aws organizations list-accounts` y CloudTrail confirmó la siguiente secuencia el 2026-04-26, toda desde la consola con identidad `root`: la cuenta `746669207643` (AWS UG Manizales) ya existía y desde ella se ejecutó `CreateOrganization` — pasó a ser la cuenta de gestión por el solo hecho de crear la `Organization o-y5zmep6ibt`; a continuación, varias llamadas a `CreateAccount` agregaron las cuentas workload. Estado resultante:
+Una auditoría con `aws organizations list-accounts` y CloudTrail confirmó la siguiente secuencia el 2026-04-26, toda desde la consola con identidad `root`: la cuenta `746669207643` (AWS UG Manizales) ya existía y desde ella se ejecutó `CreateOrganization`, pasando a ser la cuenta de gestión por el solo hecho de crear la `Organization o-y5zmep6ibt`; a continuación, varias llamadas a `CreateAccount` agregaron las cuentas workload. Estado resultante:
 
 | Cuenta | ID | Estado |
 |---|---|---|
@@ -34,10 +34,10 @@ Se elige la opción 2.
 Adoptamos **una cuenta AWS por ambiente Skorify** bajo la `Organization o-y5zmep6ibt`. Las cuentas workload (DEV, STG, PROD) viven agrupadas en la OU `Skorify` (`ou-i8pg-d23ee4e4`); la cuenta de gestión (`AWS UG Manizales`) permanece a nivel de root y aloja además los workloads de la comunidad UG (sitio web AWS UG Manizales).
 
 1. **Topología de cuentas**:
-   - `AWS UG Manizales` (`746669207643`) — cuenta master/management. Hostea la Organization, los workloads de la comunidad (sitio web AWS UG en S3+CloudFront) y un OIDC provider propio.
-   - `Skorify-development` (`968306633562`) — DEV.
-   - `Skorify-staging` (cuenta nueva por crear desde IaC, email `awsugmanizales+skorify-stg@gmail.com`) — STG. Reemplaza a la cuenta `Skorify-staggin` (`779599553264`) que queda suspendida y se documenta como deuda técnica de cierre. Ver ADR-INFRA-0011.
-   - `Skorify-production` (`151646410766`) — PROD.
+   - `AWS UG Manizales` (`746669207643`): cuenta master/management. Hostea la Organization, los workloads de la comunidad (sitio web AWS UG en S3+CloudFront) y un OIDC provider propio.
+   - `Skorify-development` (`968306633562`): DEV.
+   - `Skorify-staging` (cuenta nueva por crear desde IaC, email `awsugmanizales+skorify-stg@gmail.com`): STG. Reemplaza a la cuenta `Skorify-staggin` (`779599553264`) que queda suspendida y se documenta como deuda técnica de cierre. Ver ADR-INFRA-0011.
+   - `Skorify-production` (`151646410766`): PROD.
 
 2. **Frontera de aislamiento**: la frontera de cuenta es la frontera de ambiente. Un push a `develop` solo asume rol en la cuenta DEV, físicamente no puede tocar PROD. No se delega esa garantía a condiciones de tag, prefijos de ARN ni IAM-conditions sobre nombres de recursos.
 
