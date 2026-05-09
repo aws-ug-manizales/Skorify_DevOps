@@ -1,0 +1,19 @@
+# =============================================================================
+# Configuración de pre-commit para Skorify_Backend
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — pendiente de implementación
+#
+# ATENCIÓN: ver ADR-CICD-0010 (Husky vs framework `pre-commit`). La elección
+# de herramienta no está cerrada. BE no tiene ningún hook hoy.
+# =============================================================================
+#
+# Referencia:
+# - ADR-CICD-0007 (pre-commit hooks por tipo de proyecto)
+#
+# Hooks esperados (cuando se implemente):
+# - hooks comunes: gitleaks, commitlint, trailing-whitespace, end-of-file-fixer
+# - específicos BE: eslint, prettier, tsc --noEmit
+# - si se editan plantillas SAM: cfn-lint o equivalente
+
+repos: []
+# TODO: declarar repos de hooks

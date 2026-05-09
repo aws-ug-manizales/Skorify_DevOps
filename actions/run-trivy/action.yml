@@ -1,0 +1,29 @@
+# =============================================================================
+# Composite action: run-trivy
+# Propósito: escaneo SCA con Trivy sobre dependencias del proyecto.
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — pendiente de implementación
+# =============================================================================
+#
+# Referencia: ADR-CICD-0005 (stages MVP — SCA es uno de ellos)
+
+name: run-trivy
+description: Ejecuta Trivy para escanear vulnerabilidades en dependencias.
+
+inputs:
+  scan-type:
+    description: Tipo de escaneo (fs, image, repo).
+    required: false
+    default: fs
+  severity:
+    description: Severidades a reportar como falla.
+    required: false
+    default: 'HIGH,CRITICAL'
+  # TODO: declarar inputs adicionales (ignore-unfixed, format, etc.)
+
+runs:
+  using: composite
+  steps:
+    # TODO: implementar (aquasecurity/trivy-action)
+    - shell: bash
+      run: echo "TODO: implementar run-trivy"
