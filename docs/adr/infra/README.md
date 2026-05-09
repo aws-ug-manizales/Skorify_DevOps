@@ -20,3 +20,4 @@
 | [0008](./0008-motor-postgresql.md) | Stack PostgreSQL — TypeORM + Knex (decisión del equipo data) | Propuesto |
 | [0009](./0009-estado-fase0-y-plan-migracion-aws.md) | Estado fase 0 y plan de migración a AWS | Propuesto |
 | [0010](./0010-skorify-data-como-libreria.md) | Skorify_Data como librería consumida vía Git | Propuesto |
+| [0011](./0011-organizations-cuentas-y-ous-en-iac.md) | AWS Organization, cuentas y OUs gestionadas como IaC | Aceptado |
