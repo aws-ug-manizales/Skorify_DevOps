@@ -38,7 +38,7 @@ megaworkflow por flujo. Encaja con el modelo de stages descrito en
 
 Composite actions (en `actions/` raíz, no `.github/actions/`) se usan para
 pasos atómicos compartidos entre workflows: `setup-node`, `setup-aws-credentials`,
-`run-trivy`, `run-eslint`, `notify-slack`, `create-release-tag`.
+`run-trivy`, `run-eslint`, `create-release-tag`.
 
 Versionado: ver ADR-CICD-0009.
 
