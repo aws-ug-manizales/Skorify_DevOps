@@ -1,111 +1,101 @@
 import * as organizations from 'aws-cdk-lib/aws-organizations';
+import { RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 // ============================================================
 // Tipos compartidos
 // ============================================================
 
-/**
- * Ambientes Skorify reconocidos por el módulo.
- *
- * - `dev`, `stg`, `prd`: cuentas workload bajo la OU `Skorify`.
- *
- * La cuenta de gestión (master) **no** aparece aquí: este módulo no la
- * modela como `CfnAccount` porque `AWS::Organizations::Account` es el
- * recurso que representa cuentas miembro creadas o importadas bajo la
- * organización, y la master es la cuenta que la posee. Sus tags se
- * aplican fuera del stack (`aws organizations tag-resource` desde el
- * runbook). Ver ADR-INFRA-0011.
- */
+/** Ambientes Skorify. La master no aparece: no se modela como CfnAccount (ver ADR-INFRA-0011). */
 export type SkorifyEnvironment = 'dev' | 'stg' | 'prd';
 
 /**
- * Definición de una cuenta workload bajo la OU `Skorify`.
- *
- * Cada instancia de esta interfaz genera exactamente una cuenta
- * (`AWS::Organizations::Account`) en AWS. El módulo no decide cuáles
- * existen — solo materializa lo que esta definición declara.
- *
- * Las cuentas que ya existen (DEV, PROD) se incorporan al stack vía
- * `cdk import`; las nuevas (STG, en este momento) se crean al hacer
- * `cdk deploy`. La distinción "importada" vs "nueva" es operativa
- * (procedimiento descrito en `docs/runbooks/oidc-bootstrap.md`); el
- * código no la conoce.
+ * Cuenta workload bajo la OU Skorify. DEV y PROD ya existen y entran con
+ * `cdk import`; STG la crea CDK. La distinción es operativa, el código no
+ * la conoce.
  */
 export interface OrganizationAccountDefinition {
-  /**
-   * ID lógico único dentro del módulo. Usado como CDK construct ID y
-   * como clave en el mapa de outputs `accounts`. No puede repetirse.
-   */
+  /** ID lógico (CDK construct ID y clave en `accounts`). Único. */
   readonly logicalName: string;
 
-  /**
-   * Nombre de la cuenta en AWS Organizations (`AccountName`).
-   * Convención: `Skorify-{environment}` en kebab-case
-   * (`Skorify-development`, `Skorify-staging`, `Skorify-production`).
-   */
+  /** AccountName en Organizations. Convención: `Skorify-{environment}`. */
   readonly accountName: string;
 
-  /**
-   * Email único asociado a la cuenta. AWS exige unicidad global.
-   * Convención: `awsugmanizales+skorify-{alias}@gmail.com`.
-   * Cuando un alias está tomado se usa la forma corta acotada (caso
-   * `staging` → `stg`).
-   */
+  /** Email único globalmente. Convención: `awsugmanizales+skorify-{alias}@gmail.com`. */
   readonly email: string;
 
-  /** Ambiente Skorify al que pertenece la cuenta. */
   readonly environment: SkorifyEnvironment;
 
-  /**
-   * Handle GitHub del responsable principal. Se materializa como tag
-   * `Owner` a nivel de cuenta.
-   */
+  /** Handle de GitHub del responsable. Va como tag `Owner`. */
   readonly owner: string;
 
-  /**
-   * Valor del tag `Project`. Por defecto `Skorify`. Permite distinguir
-   * en el rollup de costos cuando una cuenta tenga workloads de varios
-   * proyectos (caso poco frecuente).
-   */
+  /** Override del tag `Project` (default: `Skorify`). */
   readonly project?: string;
 
   /**
-   * Nombre del rol IAM que Organizations crea automáticamente en la
-   * cuenta nueva y al cual la master puede asumir. Por defecto
-   * `OrganizationAccountAccessRole`.
-   *
-   * No aplica a cuentas existentes importadas: el rol ya está creado.
+   * Rol que Organizations crea en cuentas nuevas. Default:
+   * `OrganizationAccountAccessRole`. **Solo aplica a cuentas con
+   * `existing: false`**: AWS lo marca como inmutable, intentar
+   * declararlo en cuentas existentes hace que CFN falle el update con
+   * "You cannot update IAM role name."
    */
   readonly roleName?: string;
+
+  /**
+   * Marca si la cuenta ya existe en AWS. Las que tienen `existing: true`
+   * (DEV, PROD) son las que entran con `cdk import` en la Fase 1. Las
+   * que no (STG) solo se materializan en la Fase 2 (`cdk deploy`). El
+   * filtrado lo hace `lib/main.ts` según la env var
+   * `SKORIFY_ORG_IMPORT_PHASE`. El módulo solo recibe el array ya
+   * filtrado y no toma decisiones operativas.
+   */
+  readonly existing?: boolean;
 }
 
 // ============================================================
 // Props del módulo
 // ============================================================
 
+/**
+ * OU bajo la cual viven las cuentas workload. Se modela como
+ * `CfnOrganizationalUnit` para que sea importable, taggeable y auditable.
+ * En Skorify ya existe (`ou-i8pg-d23ee4e4`) y entra con `cdk import`.
+ */
+export interface OrganizationalUnitDefinition {
+  /** ID lógico (CDK construct ID y clave en el output `ou`). */
+  readonly logicalName: string;
+
+  /** Name de la OU en Organizations. En Skorify: `Skorify`. */
+  readonly name: string;
+
+  /** Padre directo. Root → `r-XXXX`; OU anidada → `ou-XXXX-YYYYYYYY`. */
+  readonly parentId: string;
+}
+
 export interface OrganizationsModuleProps {
   /**
-   * Lista de cuentas workload a gestionar.
-   *
-   * - Cada elemento genera (o importa) exactamente una cuenta.
-   * - Todos los `logicalName`, `accountName` y `email` deben ser únicos.
-   * - La cuenta de gestión (master) **no** se incluye aquí.
-   * - La cuenta `Skorify-staggin` (suspendida, deuda técnica) **no** se
-   *   incluye aquí; queda fuera del template hasta que se cierre vía
-   *   `aws organizations close-account` (ver ADR-INFRA-0011).
+   * OU contenedora. Las cuentas referencian su `ref`, no un string,
+   * para que el grafo CloudFormation quede consistente.
+   */
+  readonly ou: OrganizationalUnitDefinition;
+
+  /**
+   * Cuentas workload. La master no va aquí (no se modela como CfnAccount).
+   * `Skorify-staggin` tampoco: queda fuera del template hasta que se
+   * cierre con `aws organizations close-account` (ver ADR-INFRA-0011).
    */
   readonly accounts: OrganizationAccountDefinition[];
 
   /**
-   * ID de la OU bajo la cual se ubican todas las cuentas declaradas
-   * (`ou-XXXX-YYYYYYYY`). En Skorify hoy es `ou-i8pg-d23ee4e4` (OU
-   * `Skorify`).
+   * Si `true`, emite el template mínimo para `cdk import`: omite `Tags`
+   * y `RoleName` en cada `CfnAccount`. CloudFormation rechaza el import
+   * con `"As part of the import operation, you cannot modify or add
+   * [RoleArn, Tags]"` si esos campos están declarados.
    *
-   * El recurso de la OU se asume **importado por el operador** previo a
-   * `cdk deploy` con `cdk import`; este módulo solo lo referencia.
+   * Después del import, correr `cdk deploy` sin esta flag aplica los
+   * tags y deja el `RoleName` igual. Default: `false`.
    */
-  readonly ouId: string;
+  readonly forImport?: boolean;
 }
 
 // ============================================================
@@ -113,60 +103,37 @@ export interface OrganizationsModuleProps {
 // ============================================================
 
 /**
- * Módulo de Organizations — Skorify Plataforma.
+ * Módulo Organizations de Skorify.
  *
- * Materializa las cuentas workload bajo la OU `Skorify` como recursos
- * `AWS::Organizations::Account`. Cubre tanto las cuentas existentes
- * (que entran al stack vía `cdk import`) como las nuevas (que CDK crea
- * con `CreateAccount` al hacer `cdk deploy`).
+ * Crea o importa la OU `Skorify` y las cuentas workload bajo ella.
+ * No modela la master, no crea la Organization, no define SCPs.
+ * Los tags obligatorios (`Environment`, `Project`, `Owner`) salen del
+ * `ADR-INFRA-0002`. `DeletionPolicy: Retain` por default: quitar una
+ * cuenta del template no la cierra, solo la desasocia.
  *
- * Lo que **sí** hace:
- * - Crea o importa cuentas miembro con el `parentIds` de la OU `Skorify`.
- * - Aplica los tags obligatorios (`Environment`, `Project`, `Owner`)
- *   declarados en `ADR-INFRA-0002`.
- * - Mantiene `OrganizationAccountAccessRole` como rol de acceso por
- *   defecto.
- *
- * Lo que **no** hace, por decisión:
- * - No modela la cuenta de gestión como `CfnAccount`. Sus tags se
- *   aplican fuera del stack desde el runbook con
- *   `aws organizations tag-resource`. Ver ADR-INFRA-0011.
- * - No crea ni importa la `Organization` ni la OU. La Organization se
- *   asume preexistente; la OU se importa con `cdk import` por el
- *   operador antes de aplicar el stack.
- * - No define SCPs. Las políticas viven (en el futuro) bajo
- *   `lib/modules/organizations/scps/`, gestionadas por un PR aparte.
- *
- * Principios aplicados:
- * - Fail Fast: `validateProps` corre como primera acción; cualquier
- *   inconsistencia (logicalName/accountName/email duplicados, formato de
- *   email inválido, owner vacío) aborta antes de tocar AWS.
- * - Determinismo: agregar una cuenta es agregar un elemento al array
- *   `accounts` y abrir un PR. No hay caminos implícitos.
- * - DeletionPolicy: Retain por defecto en `AWS::Organizations::Account`
- *   (comportamiento de CloudFormation): remover una cuenta del template
- *   solo la desasocia del stack, no la cierra. Ver ADR-INFRA-0011 para
- *   el flujo de descomisión.
+ * Flujo operativo (dos fases, CloudFormation no permite mezclar):
+ * 1. `cdk import`: la OU, DEV y PROD entran al stack con sus IDs físicos.
+ * 2. `cdk deploy`: crea STG. Ver `docs/runbooks/oidc-bootstrap.md`.
  */
 export class OrganizationsModule extends Construct {
-  /**
-   * Mapa de cuentas creadas o importadas, indexado por `logicalName`.
-   * El `ref` de cada `CfnAccount` retorna el ID de la cuenta una vez
-   * resuelto por CloudFormation.
-   */
+  /** OU contenedora. `ref` resuelve al `ou-XXXX-YYYYYYYY`. */
+  public readonly ou: organizations.CfnOrganizationalUnit;
+
+  /** Cuentas indexadas por `logicalName`. `ref` resuelve al account ID. */
   public readonly accounts: Record<string, organizations.CfnAccount> = {};
+
+  private readonly forImport: boolean;
 
   constructor(scope: Construct, id: string, props: OrganizationsModuleProps) {
     super(scope, id);
 
-    if (props.accounts.length === 0) {
-      return;
-    }
-
     this.validateProps(props);
+    this.forImport = props.forImport ?? false;
+
+    this.ou = this.createOu(props.ou);
 
     for (const definition of props.accounts) {
-      this.accounts[definition.logicalName] = this.createAccount(definition, props.ouId);
+      this.accounts[definition.logicalName] = this.createAccount(definition, this.ou);
     }
   }
 
@@ -174,34 +141,25 @@ export class OrganizationsModule extends Construct {
   // Validaciones
   // ============================================================
 
-  /**
-   * Valida la coherencia de las props antes de tocar AWS.
-   *
-   * Reglas:
-   * 1. `logicalName` únicos dentro del módulo.
-   * 2. `accountName` únicos. AWS no exige unicidad de `AccountName` a
-   *    nivel de Organization, pero es un olor a error tener dos.
-   * 3. `email` únicos. AWS **sí** exige unicidad global de email; esta
-   *    validación falla rápido para no descubrirlo en deploy.
-   * 4. `email` con forma básica `local@dominio`. No es validación RFC,
-   *    solo descarta typos obvios.
-   * 5. `owner` no vacío. Sin owner no hay tag `Owner` y violamos
-   *    `ADR-INFRA-0002`.
-   * 6. `ouId` con prefijo `ou-`. Descarta confundir el ID de la OU con
-   *    un account ID o un root ID.
-   *
-   * @throws {Error} Si alguna regla no se cumple.
-   */
+  /** Fail fast antes de tocar AWS. Reglas: parentId válido, name no vacío,
+   *  logicalName/accountName/email únicos, email con forma `a@b.c`, owner no vacío. */
   private validateProps(props: OrganizationsModuleProps): void {
-    if (!props.ouId.startsWith('ou-')) {
+    if (!props.ou.parentId.startsWith('r-') && !props.ou.parentId.startsWith('ou-')) {
       throw new Error(
-        `[OrganizationsModule] ouId debe iniciar con "ou-" (recibido: "${props.ouId}").`,
+        `[OrganizationsModule] ou.parentId debe iniciar con "r-" (root) u "ou-" ` +
+          `(OU anidada). Recibido: "${props.ou.parentId}".`,
       );
     }
 
-    const logicalNames = props.accounts.map((a) => a.logicalName);
+    if (!props.ou.name.trim()) {
+      throw new Error('[OrganizationsModule] ou.name no puede estar vacío.');
+    }
+
+    const logicalNames = [props.ou.logicalName, ...props.accounts.map((a) => a.logicalName)];
     if (new Set(logicalNames).size !== logicalNames.length) {
-      throw new Error('[OrganizationsModule] Todos los logicalName deben ser únicos.');
+      throw new Error(
+        '[OrganizationsModule] Todos los logicalName deben ser únicos (incluyendo el de la OU).',
+      );
     }
 
     const accountNames = props.accounts.map((a) => a.accountName);
@@ -236,31 +194,56 @@ export class OrganizationsModule extends Construct {
   // Helpers de construcción
   // ============================================================
 
-  /**
-   * Construye un `CfnAccount` a partir de una definición.
+  /** Crea el `CfnOrganizationalUnit` con `DeletionPolicy: Retain` declarado
+   *  en el template (AWS resource import lo exige). La OU ya existe; el
+   *  operador la incorpora con `cdk import`. El `ref` queda como
+   *  `parentIds` de cada cuenta. */
+  private createOu(definition: OrganizationalUnitDefinition): organizations.CfnOrganizationalUnit {
+    const ou = new organizations.CfnOrganizationalUnit(this, definition.logicalName, {
+      name: definition.name,
+      parentId: definition.parentId,
+    });
+    ou.applyRemovalPolicy(RemovalPolicy.RETAIN);
+    return ou;
+  }
+
+  /** Crea el `CfnAccount` con `DeletionPolicy: Retain` declarado. AWS
+   *  resource import exige el atributo en el template; no basta con que
+   *  CFN lo aplique en runtime. Quitar el recurso no cierra la cuenta
+   *  (ver ADR-INFRA-0011). DEV/PROD entran con `cdk import`, STG la crea
+   *  CDK con `cdk deploy`.
    *
-   * El recurso queda con `DeletionPolicy: Retain` (default de
-   * `AWS::Organizations::Account`); removerlo del template no cierra la
-   * cuenta. Ver ADR-INFRA-0011 §5 (ciclo de vida).
+   *  Tags: en modo `forImport` se omiten (CFN rechaza el import si están
+   *  declarados con "cannot modify or add [RoleArn, Tags]"). En modo
+   *  normal sí se aplican; CFN acepta agregar Tags como UPDATE.
    *
-   * Para cuentas existentes, el operador ejecuta `cdk import` y le
-   * pasa el `accountId` real cuando CDK lo solicita interactivamente;
-   * el output `Ref` resuelve a ese mismo ID después.
-   */
+   *  RoleName: solo se declara si la cuenta NO existía (no `existing`).
+   *  Para cuentas importadas, AWS Organizations marca `RoleName` como
+   *  inmutable: el update falla con "You cannot update IAM role name."
+   *  aunque el valor sea el mismo. En cuentas nuevas (STG), CDK lo deja
+   *  fijo al crear, sin updates posteriores. */
   private createAccount(
     definition: OrganizationAccountDefinition,
-    ouId: string,
+    ou: organizations.CfnOrganizationalUnit,
   ): organizations.CfnAccount {
-    return new organizations.CfnAccount(this, definition.logicalName, {
+    const account = new organizations.CfnAccount(this, definition.logicalName, {
       accountName: definition.accountName,
       email: definition.email,
-      parentIds: [ouId],
-      roleName: definition.roleName ?? 'OrganizationAccountAccessRole',
-      tags: [
-        { key: 'Environment', value: definition.environment },
-        { key: 'Project', value: definition.project ?? 'Skorify' },
-        { key: 'Owner', value: definition.owner },
-      ],
+      parentIds: [ou.ref],
+      ...(definition.existing
+        ? {}
+        : { roleName: definition.roleName ?? 'OrganizationAccountAccessRole' }),
+      ...(this.forImport
+        ? {}
+        : {
+            tags: [
+              { key: 'Environment', value: definition.environment },
+              { key: 'Project', value: definition.project ?? 'Skorify' },
+              { key: 'Owner', value: definition.owner },
+            ],
+          }),
     });
+    account.applyRemovalPolicy(RemovalPolicy.RETAIN);
+    return account;
   }
 }

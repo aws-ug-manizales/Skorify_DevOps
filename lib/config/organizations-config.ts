@@ -1,56 +1,49 @@
 /**
- * Configuración de la AWS Organization de Skorify.
+ * Topología de la AWS Organization de Skorify. Fuente de verdad: cualquier
+ * cambio pasa por PR + revisión de los 3 líderes (CODEOWNERS). No vive en
+ * SSM porque eso saltaría el code review (ver ADR-INFRA-0011).
  *
- * **Esta es la fuente de verdad de la topología de la organización.** Cualquier
- * cambio (agregar cuenta, mover de OU, renombrar) pasa por PR a este archivo
- * con aprobación de los tres líderes según `CODEOWNERS`. Por eso vive como
- * constante TypeScript versionada, no en SSM Parameter Store: SSM permitiría
- * mutar la estructura sin code review, lo que rompe el modelo de gobernanza
- * decidido en `ADR-INFRA-0011`.
- *
- * Ámbito:
- * - Solo cuentas workload bajo la OU `Skorify` (DEV, STG, PROD).
- * - **No incluye la cuenta de gestión** (`746669207643`, AWS UG Manizales): ese
- *   activo no se modela como `CfnAccount` (ver `OrganizationsModule`).
- * - **No incluye `Skorify-staggin`** (`779599553264`, suspendida): deuda técnica
- *   de cierre, queda fuera del template hasta `aws organizations close-account`.
+ * Cubre solo cuentas workload bajo la OU `Skorify`. La master no se incluye
+ * (no se modela como CfnAccount). `Skorify-staggin` tampoco (suspendida,
+ * deuda técnica de cierre).
  */
 
-import type { OrganizationAccountDefinition } from '../modules/organizations/main';
+import type {
+  OrganizationAccountDefinition,
+  OrganizationalUnitDefinition,
+} from '../modules/organizations/main';
 
 // ============================================================
-// Identificadores de la Organization (no se gestionan desde código)
+// Identificadores de la Organization (referencia, no se gestionan)
 // ============================================================
 
-/** ID de la `AWS::Organizations::Organization`. */
 export const ORGANIZATION_ID = 'o-y5zmep6ibt';
-
-/** ID del root de la organización. */
 export const ROOT_ID = 'r-i8pg';
-
-/** ID de la OU `Skorify` que agrupa las cuentas workload. */
 export const OU_SKORIFY_ID = 'ou-i8pg-d23ee4e4';
 
-/**
- * ID de la cuenta de gestión. Se documenta para referencia operativa
- * (runbooks, scripts), pero **no se usa como `CfnAccount`** en ningún stack.
- */
+/** Master / cuenta de gestión. No se modela como CfnAccount. */
 export const MANAGEMENT_ACCOUNT_ID = '746669207643';
+
+// ============================================================
+// OU Skorify
+// ============================================================
+
+/** OU contenedora de los workloads. Ya existe; el operador la importa con `cdk import`. */
+export const SKORIFY_OU: OrganizationalUnitDefinition = {
+  logicalName: 'SkorifyOu',
+  name: 'Skorify',
+  parentId: ROOT_ID,
+};
 
 // ============================================================
 // Cuentas workload bajo la OU Skorify
 // ============================================================
 
 /**
- * Cuentas que el módulo `OrganizationsModule` administra.
- *
- * Estado al 2026-05-09:
- * - `SkorifyDevelopment` y `SkorifyProduction` ya existen en AWS y se
- *   incorporan al stack vía `cdk import` (ver runbook).
- * - `SkorifyStaging` es nueva: CDK la crea con `CreateAccount` en el primer
- *   `cdk deploy` posterior al import. El email usa el alias `+skorify-stg@`
- *   porque `+skorify-staging@` está tomado por la cuenta suspendida y AWS no
- *   lo libera hasta 90 días después del cierre definitivo.
+ * DEV y PROD ya existen y entran con `cdk import`. STG es nueva, la crea
+ * `cdk deploy`. El email de STG usa `+skorify-stg@` porque `+skorify-staging@`
+ * lo tiene la cuenta suspendida y AWS no lo libera hasta 90 días después del
+ * cierre.
  */
 export const SKORIFY_ACCOUNTS: OrganizationAccountDefinition[] = [
   {
@@ -59,13 +52,20 @@ export const SKORIFY_ACCOUNTS: OrganizationAccountDefinition[] = [
     email: 'awsugmanizales+skorify-dev@gmail.com',
     environment: 'dev',
     owner: '@Mateo454',
+    existing: true,
   },
   {
+    // ID real: 553284493694. Originalmente STG no existía y este config
+    // pedía crearla con cdk deploy. Un deploy fallido (RoleName inmutable
+    // en cuentas existentes) hizo rollback en CFN, pero AWS Organizations
+    // ya había creado la cuenta async. Quedó huérfana y se incorpora con
+    // cdk import como las demás.
     logicalName: 'SkorifyStaging',
     accountName: 'Skorify-staging',
     email: 'awsugmanizales+skorify-stg@gmail.com',
     environment: 'stg',
     owner: '@Mateo454',
+    existing: true,
   },
   {
     logicalName: 'SkorifyProduction',
@@ -73,5 +73,6 @@ export const SKORIFY_ACCOUNTS: OrganizationAccountDefinition[] = [
     email: 'awsugmanizales+skorify-prod@gmail.com',
     environment: 'prd',
     owner: '@Mateo454',
+    existing: true,
   },
 ];
