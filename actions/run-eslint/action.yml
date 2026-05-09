@@ -1,0 +1,25 @@
+# =============================================================================
+# Composite action: run-eslint
+# Propósito: ejecutar ESLint con configuración del repo y reportar resultados.
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — pendiente de implementación
+# =============================================================================
+#
+# Referencia: ADR-CICD-0005 (stage de Linting & formatting en MVP)
+
+name: run-eslint
+description: Ejecuta ESLint con la configuración del repo consumidor.
+
+inputs:
+  working-directory:
+    description: Directorio donde correr eslint.
+    required: false
+    default: '.'
+  # TODO: declarar inputs adicionales (max-warnings, format, etc.)
+
+runs:
+  using: composite
+  steps:
+    # TODO: implementar (eslint con reporter compatible con GitHub annotations)
+    - shell: bash
+      run: echo "TODO: implementar run-eslint"

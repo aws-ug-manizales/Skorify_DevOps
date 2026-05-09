@@ -1,0 +1,27 @@
+# =============================================================================
+# Configuración de pre-commit para Skorify_Frontend
+# Owner: equipo CI/CD — @steevensmelo
+# Estado: CASCARÓN — pendiente de implementación
+#
+# ATENCIÓN: hay una decisión cruzada pendiente en ADR-CICD-0010
+# (Husky vs framework `pre-commit`). Skorify_Frontend YA usa Husky + lint-staged
+# con reglas en su `package.json`. Si el equipo elige Husky como estándar,
+# este archivo se elimina y la guía apunta al setup de Husky en cada repo.
+# Si se elige `pre-commit` framework, el equipo FE tendrá que migrar.
+# Hasta que el ADR se cierre, este archivo queda como cascarón.
+# =============================================================================
+#
+# Referencia:
+# - ADR-CICD-0007 (pre-commit hooks por tipo de proyecto)
+# - https://pre-commit.com (documentación de la herramienta)
+#
+# Hooks esperados (cuando se implemente):
+# - hooks comunes: gitleaks, commitlint, trailing-whitespace, end-of-file-fixer
+# - específicos FE: eslint, prettier, tsc --noEmit
+#
+# Una vez implementado, el repo Skorify_Frontend lo copia a su raíz como
+# .pre-commit-config.yaml o lo extiende con `extends:` si la herramienta lo
+# permite.
+
+repos: []
+# TODO: declarar repos de hooks
