@@ -1,29 +1,67 @@
 # =============================================================================
 # Composite action: setup-aws-credentials
-# Propósito: configurar credenciales AWS vía OIDC para el ambiente especificado.
-# Owner: equipo CI/CD — @steevensmelo (con revisión de Infra para los roles)
-# Estado: CASCARÓN — pendiente de implementación
-# =============================================================================
+# Configura credenciales AWS temporales via OIDC para los workflows de los
+# repos Skorify. Resuelve el ARN del rol federado segun la matriz de
+# ADR-INFRA-0005: environment -> cuenta workload, domain -> nombre del rol.
 #
-# Referencia: ADR-INFRA-0005 (autenticación GitHub→AWS vía OIDC).
-# Decisión sensible: requiere aprobación de los 3 líderes (toca IAM).
+# No cubre la cuenta de gestion (master): el sitio de la comunidad
+# (Pagina_Web) usa aws-actions/configure-aws-credentials directo.
+#
+# Owner: equipo CI/CD (@steevensmelo), roles revisados por Infra (@Mateo454).
+# =============================================================================
 
 name: setup-aws-credentials
-description: Configura credenciales temporales AWS vía OIDC para un ambiente.
+description: Configura credenciales AWS temporales via OIDC para un ambiente y dominio Skorify.
 
 inputs:
   environment:
-    description: Ambiente destino (dev, stg, prd).
+    description: Ambiente Skorify destino. Uno de dev | stg | prd.
+    required: true
+  domain:
+    description: Dominio del rol. backend | frontend | data | infra | ops.
     required: true
   aws-region:
-    description: Región AWS.
+    description: Region AWS.
     required: false
     default: us-east-1
-  # TODO: declarar input role-to-assume o resolverlo desde environment
+
+outputs:
+  role-arn:
+    description: ARN del rol asumido.
+    value: ${{ steps.resolve.outputs.role-arn }}
+  account-id:
+    description: ID de la cuenta AWS resuelta.
+    value: ${{ steps.resolve.outputs.account-id }}
 
 runs:
   using: composite
   steps:
-    # TODO: implementar (aws-actions/configure-aws-credentials con role-to-assume)
-    - shell: bash
-      run: echo "TODO: implementar setup-aws-credentials para ${{ inputs.environment }}"
+    - name: Resolver ARN del rol
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        case "${{ inputs.environment }}" in
+          dev) account=968306633562 ;;
+          stg) account=553284493694 ;;
+          prd) account=151646410766 ;;
+          *) echo "::error::environment invalido: '${{ inputs.environment }}' (esperado dev|stg|prd)"; exit 1 ;;
+        esac
+
+        case "${{ inputs.domain }}" in
+          backend|frontend|data|infra) role="skorify-${{ inputs.domain }}-deploy" ;;
+          ops)                         role="skorify-ops-readonly" ;;
+          *) echo "::error::domain invalido: '${{ inputs.domain }}' (esperado backend|frontend|data|infra|ops)"; exit 1 ;;
+        esac
+
+        echo "account-id=${account}" >> "$GITHUB_OUTPUT"
+        echo "role-arn=arn:aws:iam::${account}:role/${role}" >> "$GITHUB_OUTPUT"
+        echo "Rol resuelto: arn:aws:iam::${account}:role/${role}"
+
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ steps.resolve.outputs.role-arn }}
+        aws-region: ${{ inputs.aws-region }}
+        audience: sts.amazonaws.com
+        role-session-name: gh-${{ github.repository_id }}-${{ github.run_id }}
