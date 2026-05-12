@@ -4,6 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { loadConfigFromSSM } from './config/ssm-reader';
 import { S3Module } from './modules/s3/main';
 import { maybeCreateSkorifyOrganizationStack } from './modules/organizations/stack';
+import { maybeCreateSkorifyBootstrapStack } from './modules/iam/oidc-and-roles/stack';
 
 const app = new cdk.App();
 const environmentName = process.env.SKORIFY_ENVIRONMENT ?? 'dev';
@@ -72,4 +73,17 @@ if (config.s3Buckets.length > 0) {
 maybeCreateSkorifyOrganizationStack(app, {
   currentAccount: process.env.CDK_DEFAULT_ACCOUNT,
   importPhase: process.env.SKORIFY_ORG_IMPORT_PHASE === 'true',
+});
+
+// ==========================================
+// Stack de Bootstrap OIDC (se materializa según la cuenta activa)
+// ==========================================
+// Master: rol awsug-pagina-web-deploy.
+// DEV/STG/PROD: 5 roles Skorify (backend, frontend, data, infra, ops-readonly).
+// Cuentas no modeladas: undefined, el stack no aparece en cdk list.
+// Detalle en docs/runbooks/oidc-bootstrap.md y en
+// lib/modules/iam/oidc-and-roles/stack.ts.
+// ==========================================
+maybeCreateSkorifyBootstrapStack(app, {
+  currentAccount: process.env.CDK_DEFAULT_ACCOUNT,
 });
