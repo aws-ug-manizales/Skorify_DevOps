@@ -264,12 +264,36 @@ describe('OidcAndRolesModule: validaciones', () => {
 // ============================================================
 
 describe('iam-roles-config: matriz de roles', () => {
-  test('rolesForMaster contiene únicamente awsug-pagina-web-deploy', () => {
+  test('rolesForMaster contiene awsug-pagina-web-deploy y awsug-pagina-web-infra', () => {
     const roles = rolesForMaster();
-    expect(roles).toHaveLength(1);
-    expect(roles[0].roleName).toBe('awsug-pagina-web-deploy');
-    expect(roles[0].repoName).toBe(REPOS.paginaWeb);
-    expect(roles[0].subPatterns).toEqual(['ref:refs/heads/main']);
+    const names = roles.map((r) => r.roleName).sort();
+    expect(names).toEqual(['awsug-pagina-web-deploy', 'awsug-pagina-web-infra']);
+    for (const role of roles) {
+      expect(role.repoName).toBe(REPOS.paginaWeb);
+      expect(role.subPatterns).toEqual(['ref:refs/heads/main']);
+    }
+  });
+
+  test('awsug-pagina-web-infra tiene acceso al bucket de state y a CloudFront, sin tocar objetos S3', () => {
+    const infra = rolesForMaster().find((r) => r.roleName === 'awsug-pagina-web-infra')!;
+    const json = infra.statements.map((s) => s.toStatementJson());
+    const sids = json.map((s: { Sid?: string }) => s.Sid);
+
+    expect(sids).toEqual(
+      expect.arrayContaining([
+        'TerraformStateBucket',
+        'TerraformStateObjects',
+        'PaginaWebBucketConfig',
+        'CloudFrontInfra',
+        'AcmRead',
+      ]),
+    );
+
+    // El statement del bucket de Pagina_Web es sobre el bucket, no sobre objetos.
+    const bucketCfg = json.find((s: { Sid?: string }) => s.Sid === 'PaginaWebBucketConfig');
+    const resources = Array.isArray(bucketCfg!.Resource) ? bucketCfg!.Resource : [bucketCfg!.Resource];
+    expect(resources).toContain('arn:aws:s3:::web-aws-group-manizales');
+    expect(resources.every((r: string) => !r.endsWith('/*'))).toBe(true);
   });
 
   test('rolesForSkorifyAccount produce los 5 roles del dominio', () => {
@@ -372,7 +396,7 @@ describe('SkorifyBootstrapStack: materialización por cuenta activa', () => {
     ).toBeUndefined();
   });
 
-  test('en master crea solo awsug-pagina-web-deploy', () => {
+  test('en master crea los roles awsug-* (deploy + infra), ninguno skorify-*', () => {
     const app = new cdk.App();
     const stack = maybeCreateSkorifyBootstrapStack(app, {
       currentAccount: MANAGEMENT_ACCOUNT_ID,
@@ -382,7 +406,10 @@ describe('SkorifyBootstrapStack: materialización por cuenta activa', () => {
     expect(stack.account).toBe(MANAGEMENT_ACCOUNT_ID);
 
     const template = Template.fromStack(stack);
-    expect(deployRoleNames(template, 'awsug-')).toEqual(['awsug-pagina-web-deploy']);
+    expect(deployRoleNames(template, 'awsug-')).toEqual([
+      'awsug-pagina-web-deploy',
+      'awsug-pagina-web-infra',
+    ]);
     expect(deployRoleNames(template, 'skorify-')).toEqual([]);
   });
 

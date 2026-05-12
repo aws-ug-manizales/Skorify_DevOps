@@ -21,26 +21,117 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 // Pagina_Web (master)
 // ============================================================
 
+// Constantes de la infra de Pagina_Web en la cuenta master.
+const PAGINA_WEB_ACCOUNT = '746669207643';
+const PAGINA_WEB_BUCKET = 'web-aws-group-manizales';
+const PAGINA_WEB_DISTRIBUTION = 'E3OT8P8FKMB7Q7';
+const PAGINA_WEB_TF_STATE_BUCKET = 'aws-ug-manizales-tf-state-746669207643';
+
 /**
- * `awsug-pagina-web-deploy`. Único caso con infra real en master:
- * S3 `web-aws-group-manizales` y CloudFront `E3OT8P8FKMB7Q7`.
+ * `awsug-pagina-web-deploy`. Rol del workflow para sincronizar los
+ * assets estáticos: S3 sync sobre `web-aws-group-manizales` y CloudFront
+ * invalidate sobre `E3OT8P8FKMB7Q7`. Bajo privilegio, uso frecuente.
  */
 export function paginaWebDeployStatements(): iam.PolicyStatement[] {
   return [
     new iam.PolicyStatement({
       sid: 'ListPaginaWebBucket',
       actions: ['s3:ListBucket'],
-      resources: ['arn:aws:s3:::web-aws-group-manizales'],
+      resources: [`arn:aws:s3:::${PAGINA_WEB_BUCKET}`],
     }),
     new iam.PolicyStatement({
       sid: 'WritePaginaWebBucketObjects',
       actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-      resources: ['arn:aws:s3:::web-aws-group-manizales/*'],
+      resources: [`arn:aws:s3:::${PAGINA_WEB_BUCKET}/*`],
     }),
     new iam.PolicyStatement({
       sid: 'InvalidatePaginaWebDistribution',
       actions: ['cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation'],
-      resources: ['arn:aws:cloudfront::746669207643:distribution/E3OT8P8FKMB7Q7'],
+      resources: [`arn:aws:cloudfront::${PAGINA_WEB_ACCOUNT}:distribution/${PAGINA_WEB_DISTRIBUTION}`],
+    }),
+  ];
+}
+
+/**
+ * `awsug-pagina-web-infra`. Rol del workflow para `terraform apply` de
+ * la infra de Pagina_Web (CloudFront, config del bucket S3, response
+ * headers policy, OAC). Alto privilegio, uso raro: solo en merge a
+ * `main`, detrás del GitHub Environment `production` con required
+ * reviewers. No gestiona los objetos S3 (esos los sincroniza
+ * `awsug-pagina-web-deploy`); el `removed` block del Terraform los dejó
+ * fuera del state.
+ *
+ * Incluye acceso de lectura/escritura al bucket de state remoto
+ * `aws-ug-manizales-tf-state-746669207643` (Terraform lo necesita para
+ * el state y el lock nativo de S3).
+ */
+export function paginaWebInfraStatements(): iam.PolicyStatement[] {
+  return [
+    new iam.PolicyStatement({
+      sid: 'TerraformStateBucket',
+      actions: ['s3:ListBucket', 's3:GetBucketVersioning'],
+      resources: [`arn:aws:s3:::${PAGINA_WEB_TF_STATE_BUCKET}`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'TerraformStateObjects',
+      // El state y el lockfile nativo (use_lockfile) viven bajo la key
+      // pagina-web/terraform.tfstate (y .tflock).
+      actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject'],
+      resources: [`arn:aws:s3:::${PAGINA_WEB_TF_STATE_BUCKET}/pagina-web/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'PaginaWebBucketConfig',
+      // Gestionar el bucket y su configuración (versioning, encryption,
+      // policy, public access block, ownership). NO objetos.
+      actions: [
+        's3:GetBucket*',
+        's3:PutBucket*',
+        's3:GetEncryptionConfiguration',
+        's3:PutEncryptionConfiguration',
+        's3:GetBucketPolicy',
+        's3:PutBucketPolicy',
+        's3:DeleteBucketPolicy',
+        's3:GetAccelerateConfiguration',
+        's3:CreateBucket',
+        's3:ListBucket',
+      ],
+      resources: [`arn:aws:s3:::${PAGINA_WEB_BUCKET}`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CloudFrontInfra',
+      // CloudFront es global; los ARNs llevan el accountId. Gestionar la
+      // distro, los OAC y las response headers policies de la cuenta.
+      actions: [
+        'cloudfront:GetDistribution',
+        'cloudfront:GetDistributionConfig',
+        'cloudfront:UpdateDistribution',
+        'cloudfront:CreateDistribution',
+        'cloudfront:TagResource',
+        'cloudfront:UntagResource',
+        'cloudfront:ListTagsForResource',
+        'cloudfront:GetOriginAccessControl',
+        'cloudfront:GetOriginAccessControlConfig',
+        'cloudfront:CreateOriginAccessControl',
+        'cloudfront:UpdateOriginAccessControl',
+        'cloudfront:ListOriginAccessControls',
+        'cloudfront:GetResponseHeadersPolicy',
+        'cloudfront:GetResponseHeadersPolicyConfig',
+        'cloudfront:CreateResponseHeadersPolicy',
+        'cloudfront:UpdateResponseHeadersPolicy',
+        'cloudfront:ListResponseHeadersPolicies',
+        'cloudfront:ListDistributions',
+      ],
+      resources: [
+        `arn:aws:cloudfront::${PAGINA_WEB_ACCOUNT}:distribution/*`,
+        `arn:aws:cloudfront::${PAGINA_WEB_ACCOUNT}:origin-access-control/*`,
+        `arn:aws:cloudfront::${PAGINA_WEB_ACCOUNT}:response-headers-policy/*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'AcmRead',
+      // Terraform lee el certificado ACM referenciado por la distro.
+      actions: ['acm:DescribeCertificate', 'acm:ListCertificates', 'acm:ListTagsForCertificate'],
+      resources: ['*'],
     }),
   ];
 }

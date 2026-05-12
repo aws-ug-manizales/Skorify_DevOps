@@ -25,6 +25,7 @@ import {
   skorifyFrontendDeployStatements,
   skorifyInfraDeployStatements,
   skorifyOpsReadonlyStatements,
+  paginaWebInfraStatements,
 } from '../modules/iam/oidc-and-roles/permissions';
 import { MANAGEMENT_ACCOUNT_ID } from './organizations-config';
 
@@ -61,8 +62,18 @@ export function rolesForMaster(): DeployRoleDefinition[] {
       roleName: 'awsug-pagina-web-deploy',
       repoName: REPOS.paginaWeb,
       subPatterns: ['ref:refs/heads/main'],
-      description: 'Deploy del sitio AWS UG Manizales a S3+CloudFront desde el repo Pagina_Web.',
+      description: 'Deploy de assets del sitio AWS UG Manizales (S3 sync + CloudFront invalidate) desde Pagina_Web.',
       statements: paginaWebDeployStatements(),
+    },
+    {
+      logicalName: 'AwsUgPaginaWebInfra',
+      roleName: 'awsug-pagina-web-infra',
+      repoName: REPOS.paginaWeb,
+      // Solo en merge a main; el workflow además lo pone detrás del
+      // GitHub Environment `production` con required reviewers.
+      subPatterns: ['ref:refs/heads/main'],
+      description: 'terraform apply de la infra de Pagina_Web (CloudFront, config del bucket, OAC, response headers policy) desde main.',
+      statements: paginaWebInfraStatements(),
     },
   ];
 }
