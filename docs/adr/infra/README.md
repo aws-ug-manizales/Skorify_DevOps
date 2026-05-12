@@ -12,7 +12,7 @@
 |-----|--------|--------|
 | [0001](./0001-cdk-frontend-sam-backend.md) | CDK para frontend y SAM para backend | Aceptado |
 | [0002](./0002-aislamiento-ambientes-por-cuenta.md) | Aislamiento de ambientes por cuenta AWS | Aceptado |
-| [0003](./0003-frontend-nextjs-ssg-s3-cloudfront.md) | Frontend Next.js SSG en S3 + CloudFront | Propuesto |
+| [0003](./0003-frontend-nextjs-ssg-s3-cloudfront.md) | Frontend Next.js SSG en S3 + CloudFront | Aceptado |
 | [0004](./0004-backend-lambda-apigw-typescript.md) | Backend en Lambda + API Gateway + Node.js TypeScript | Propuesto |
 | [0005](./0005-oidc-github-aws.md) | Autenticación GitHub Actions a AWS vía OIDC | Aceptado |
 | [0006](./0006-tagging-naming-aws.md) | Estándar de tagging y naming AWS | Propuesto |
