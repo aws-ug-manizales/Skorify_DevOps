@@ -1,0 +1,48 @@
+name: "Shared: Build Frontend"
+
+on:
+    workflow_call:
+        inputs:
+            node-version:
+                description: 'Version de Node.js a utilizar'
+                required: false
+                default: '22'
+                type: string
+
+            working-directory:
+                description: 'Directorio donde se encuentra el package.json del proyecto'
+                required: false
+                default: '.'
+                type: string
+
+jobs:
+    build:
+        name: Build del proyecto frontend
+        runs-on: ubuntu-latest
+
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+
+        steps:
+            - name: Checkout del codigo
+              uses: actions/checkout@v6
+
+            - name: Setup Node.js ${{ inputs.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                node-version: ${{ inputs.node-version }}
+                cache: 'npm'
+                cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Build del proyecto
+              run: npm run build
+            
+            - name: Subir artefactos de build
+              uses: actions/upload-artifact@v7
+              with:
+                name: skorify-frontend-build
+                path: ${{ inputs.working-directory }}/build

@@ -4,7 +4,8 @@ on:
   workflow_call:                                                                   
                                                                                                      
 jobs:                                                                                                          
-  sca-scan:                                                                                                                                   
+  sca-scan:
+    name: Escaneo de vulnerabilidades con Trivy
     runs-on: ubuntu-latest
 
     container:                                                                                                                                   
@@ -16,4 +17,4 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Ejecutar Trivy para escaneo de vulnerabilidades                                
-        run: trivy fs --scanners vuln,secret,misconfig .
+        run: trivy fs --scanners vuln,secret,misconfig --exit-code 1 .
