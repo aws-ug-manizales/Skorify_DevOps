@@ -45,26 +45,33 @@ runs:
     - name: Resolver ARN del rol
       id: resolve
       shell: bash
+      # Inputs van por env: + variables de shell entre comillas para evitar
+      # script injection (un input controlado por el caller no se interpola
+      # como código de shell). Patrón documentado en
+      # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        INPUT_DOMAIN: ${{ inputs.domain }}
       run: |
         set -euo pipefail
-        case "${{ inputs.environment }}" in
+        case "$INPUT_ENVIRONMENT" in
           dev) account=968306633562 ;;
           stg) account=553284493694 ;;
           prd) account=151646410766 ;;
-          *) echo "::error::environment invalido: '${{ inputs.environment }}' (esperado dev|stg|prd)"; exit 1 ;;
+          *) echo "::error::environment invalido: '$INPUT_ENVIRONMENT' (esperado dev|stg|prd)"; exit 1 ;;
         esac
 
-        case "${{ inputs.domain }}" in
-          backend|frontend|data|infra) role="skorify-${{ inputs.domain }}-deploy" ;;
+        case "$INPUT_DOMAIN" in
+          backend|frontend|data|infra) role="skorify-${INPUT_DOMAIN}-deploy" ;;
           frontend-infra)              role="skorify-frontend-infra" ;;
           ops)                         role="skorify-ops-readonly" ;;
-          *) echo "::error::domain invalido: '${{ inputs.domain }}' (esperado backend|frontend|frontend-infra|data|infra|ops)"; exit 1 ;;
+          *) echo "::error::domain invalido: '$INPUT_DOMAIN' (esperado backend|frontend|frontend-infra|data|infra|ops)"; exit 1 ;;
         esac
 
         # El rol skorify-frontend-infra (y, en Pagina_Web, awsug-pagina-web-infra)
         # tiene la trust policy condicionada a sub `...:environment:<env>`, así que
         # el job que llama este action con domain=frontend-infra DEBE declarar
-        # `environment: ${{ inputs.environment }}` o el AssumeRole fallará.
+        # `environment: <ambiente>` o el AssumeRole fallará.
 
         echo "account-id=${account}" >> "$GITHUB_OUTPUT"
         echo "role-arn=arn:aws:iam::${account}:role/${role}" >> "$GITHUB_OUTPUT"
