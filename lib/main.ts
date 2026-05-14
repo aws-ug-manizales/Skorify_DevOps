@@ -78,8 +78,9 @@ maybeCreateSkorifyOrganizationStack(app, {
 // ==========================================
 // Stack de Bootstrap OIDC (se materializa según la cuenta activa)
 // ==========================================
-// Master: rol awsug-pagina-web-deploy.
-// DEV/STG/PROD: 5 roles Skorify (backend, frontend, data, infra, ops-readonly).
+// Master: roles awsug-pagina-web-deploy y awsug-pagina-web-infra.
+// DEV/STG/PROD: 6 roles Skorify (backend, frontend, frontend-infra, data,
+// infra, ops-readonly).
 // Cuentas no modeladas: undefined, el stack no aparece en cdk list.
 // Detalle en docs/runbooks/oidc-bootstrap.md y en
 // lib/modules/iam/oidc-and-roles/stack.ts.

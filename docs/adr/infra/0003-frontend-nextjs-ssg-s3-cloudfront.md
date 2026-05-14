@@ -75,7 +75,7 @@ Restricción conocida (ver nota al final): el `Skorify_Frontend/next.config.ts` 
 - **Tamaño del export**: si crece mucho, los tiempos de `aws s3 sync` y de invalidación suben. Por ahora no es problema.
 - **CSP rota features**: una CSP muy estricta puede romper MUI, las llamadas al API o recursos externos. Iterar con el frontend desplegado.
 - **Drift de la distro**: igual que con Pagina_Web, asegurar que el `cdk deploy` de infra se corra desde el CI (no a mano) para que el state quede consistente. El workflow del frontend debe incluir el job de `cdk deploy` de infra detrás del environment con reviewers.
-- **`skorify-frontend-infra` con `sts:AssumeRole` a los cdk-bootstrap roles**: igual que `skorify-infra-deploy`, el `cdk-hnb659fds-cfn-exec-role` default es admin; el least-privilege real está en la trust policy OIDC (solo el repo `Skorify_Frontend` en sus ramas).
+- **`skorify-frontend-infra` con `sts:AssumeRole` a los cdk-bootstrap roles**: igual que `skorify-infra-deploy`, el `cdk-hnb659fds-cfn-exec-role` default es admin; el least-privilege real está en la trust policy OIDC (`environment:{dev|stg|prd}` en el repo `Skorify_Frontend`, gateado por el GitHub Environment).
 
 ## Notas adicionales
 

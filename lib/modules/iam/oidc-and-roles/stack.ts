@@ -15,9 +15,9 @@ export interface SkorifyBootstrapStackOptions {
 
 /**
  * Crea `SkorifyBootstrapStack` con el OIDC provider de GitHub y los
- * roles aplicables a la cuenta activa. La cuenta master recibe el rol
- * `awsug-pagina-web-deploy`; cada cuenta workload (DEV/STG/PROD)
- * recibe los 5 roles Skorify.
+ * roles aplicables a la cuenta activa. La cuenta master recibe los
+ * roles `awsug-pagina-web-deploy` y `awsug-pagina-web-infra`; cada
+ * cuenta workload (DEV/STG/PROD) recibe los 6 roles Skorify.
  *
  * Devuelve `undefined` si la cuenta activa no está modelada en
  * `SKORIFY_ACCOUNT_TO_ENV` ni es la master, para no contaminar
