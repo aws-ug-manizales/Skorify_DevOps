@@ -22,19 +22,26 @@ jobs:
         uses: aws-ug-manizales/Skorify_DevOps/actions/setup-aws-credentials@<sha>
         with:
           environment: dev       # dev | stg | prd
-          domain: frontend       # backend | frontend | data | infra | ops
+          domain: frontend       # backend | frontend | frontend-infra | data | infra | ops
 
       - run: aws sts get-caller-identity
 ```
 
 Pinear a un SHA (no a `@main`) en repos de producción.
 
+> El rol `skorify-frontend-infra` (`domain: frontend-infra`) tiene la trust
+> policy condicionada al `sub` `repo:...:environment:<ambiente>`. El job que lo
+> use **debe** declarar `environment: <ambiente>` (el mismo valor que pasa en
+> `environment:` de este action), si no el `AssumeRole` falla con `AccessDenied`.
+> Eso es a propósito: el deploy de infra pasa por el GitHub Environment (required
+> reviewers + branch policy).
+
 ## Inputs
 
 | Input | Requerido | Default | Descripción |
 |---|---|---|---|
 | `environment` | sí | — | `dev` \| `stg` \| `prd`. |
-| `domain` | sí | — | `backend` \| `frontend` \| `data` \| `infra` \| `ops`. |
+| `domain` | sí | — | `backend` \| `frontend` \| `frontend-infra` \| `data` \| `infra` \| `ops`. |
 | `aws-region` | no | `us-east-1` | Región. |
 
 ## Outputs
@@ -59,23 +66,27 @@ Pinear a un SHA (no a `@main`) en repos de producción.
 | domain | rol |
 |---|---|
 | `backend` / `frontend` / `data` / `infra` | `skorify-{domain}-deploy` |
+| `frontend-infra` | `skorify-frontend-infra` |
 | `ops` | `skorify-ops-readonly` |
 
 Una combinación inválida (`environment` o `domain` fuera de los valores listados) falla con un error claro antes de intentar el assume.
 
 ## Trust policies
 
-Cada rol solo puede asumirse desde el repo y la rama declarados en su trust policy (ver `lib/config/iam-roles-config.ts`):
+Cada rol solo puede asumirse desde el repo y el contexto (rama o GitHub Environment) declarados en su trust policy (ver `lib/config/iam-roles-config.ts`):
 
-| Ambiente | `sub` aceptado |
+| Ambiente | `sub` aceptado (roles de deploy) |
 |---|---|
 | dev | `repo:aws-ug-manizales/{repo}:ref:refs/heads/develop` |
 | stg | `repo:aws-ug-manizales/{repo}:ref:refs/heads/release/*` |
 | prd | `repo:aws-ug-manizales/{repo}:ref:refs/heads/main` y `hotfix/*` |
 
-`skorify-ops-readonly` acepta cualquier rama (`refs/heads/*`).
+Excepciones:
 
-Si el workflow corre desde una rama que no matchea el `sub` del rol, el assume falla con `AccessDenied`. Eso es esperado: es la garantía de aislamiento.
+- `skorify-frontend-infra`: `sub` = `repo:aws-ug-manizales/Skorify_Frontend:environment:{dev|stg|prd}`. Lo emite GitHub solo cuando el job declara `environment:`, así que el deploy de infra pasa sí o sí por el Environment (required reviewers + branch policy). Mismo patrón en `awsug-pagina-web-infra` (repo `Pagina_Web`, `environment:production`), aunque ese no se asume vía este composite.
+- `skorify-ops-readonly`: acepta cualquier rama (`refs/heads/*`).
+
+Si el workflow corre desde una rama (o sin el `environment:` esperado) que no matchea el `sub` del rol, el assume falla con `AccessDenied`. Eso es esperado: es la garantía de aislamiento.
 
 ## Referencias
 

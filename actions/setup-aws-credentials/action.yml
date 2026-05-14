@@ -18,7 +18,13 @@ inputs:
     description: Ambiente Skorify destino. Uno de dev | stg | prd.
     required: true
   domain:
-    description: Dominio del rol. backend | frontend | data | infra | ops.
+    description: >-
+      Dominio del rol. backend | frontend | frontend-infra | data | infra | ops.
+      'frontend' es el rol assets-only (sync del export); 'frontend-infra' es el
+      rol del cdk deploy de la infra del frontend (ver ADR-INFRA-0003). Con
+      domain=frontend-infra el job que use este action DEBE declarar
+      `environment: <ambiente>`: la trust policy de skorify-frontend-infra
+      exige el sub `repo:...:environment:<ambiente>`.
     required: true
   aws-region:
     description: Region AWS.
@@ -50,9 +56,15 @@ runs:
 
         case "${{ inputs.domain }}" in
           backend|frontend|data|infra) role="skorify-${{ inputs.domain }}-deploy" ;;
+          frontend-infra)              role="skorify-frontend-infra" ;;
           ops)                         role="skorify-ops-readonly" ;;
-          *) echo "::error::domain invalido: '${{ inputs.domain }}' (esperado backend|frontend|data|infra|ops)"; exit 1 ;;
+          *) echo "::error::domain invalido: '${{ inputs.domain }}' (esperado backend|frontend|frontend-infra|data|infra|ops)"; exit 1 ;;
         esac
+
+        # El rol skorify-frontend-infra (y, en Pagina_Web, awsug-pagina-web-infra)
+        # tiene la trust policy condicionada a sub `...:environment:<env>`, así que
+        # el job que llama este action con domain=frontend-infra DEBE declarar
+        # `environment: ${{ inputs.environment }}` o el AssumeRole fallará.
 
         echo "account-id=${account}" >> "$GITHUB_OUTPUT"
         echo "role-arn=arn:aws:iam::${account}:role/${role}" >> "$GITHUB_OUTPUT"
