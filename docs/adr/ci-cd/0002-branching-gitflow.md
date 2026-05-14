@@ -8,7 +8,7 @@
 
 ## Contexto
 
-El proyecto despliega a tres ambientes (DEV, STG, PROD) y usa una sola cuenta AWS. Necesitamos una estrategia de branching que:
+El proyecto despliega a tres ambientes (DEV, STG, PROD), cada uno en una cuenta AWS dedicada (ver ADR-INFRA-0002). Necesitamos una estrategia de branching que:
 
 - Sea entendible por estudiantes en su primer proyecto.
 - Soporte hotfixes urgentes sin saltarse las validaciones.

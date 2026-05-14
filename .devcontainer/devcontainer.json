@@ -1,6 +1,6 @@
 {
   "name": "Skorify Infraestructura",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
   "features": {
     "ghcr.io/devcontainers/features/aws-cli:1": {}
   },

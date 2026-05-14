@@ -6,7 +6,7 @@ Este documento describe el flujo real del entorno de desarrollo dentro del devco
 
 ## Qué hace el contenedor
 
-El contenedor usa la imagen base `mcr.microsoft.com/devcontainers/typescript-node:18` y agrega la feature de AWS CLI.
+El contenedor usa la imagen base `mcr.microsoft.com/devcontainers/typescript-node:24` y agrega la feature de AWS CLI. Node 24 es la versión LTS actual y alinea con `@types/node@^24.x` declarado en `package.json`, además de coincidir con la versión usada por los workflows del resto de los repos de la organización.
 
 Al crear el contenedor:
 

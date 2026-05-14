@@ -564,10 +564,10 @@ jobs:
       </section>
 
       <!-- =====================================================
-           SLIDE 11 — Tres ambientes · una sola cuenta
+           SLIDE 11 — Tres ambientes · tres cuentas
       ====================================================== -->
       <section data-background-color="#1b1f30">
-        <h2>Tres ambientes · una sola cuenta</h2>
+        <h2>Tres ambientes · tres cuentas</h2>
         <p style="font-size: 0.82em; color: var(--primary-glow); margin-bottom: 0.4em;">
           GitFlow define la rama · la rama decide el ambiente.<br />
           <span style="opacity: 0.75;">ADR-CICD-0002 · ADR-CICD-0003 · ADR-INFRA-0002.</span>
@@ -601,7 +601,7 @@ jobs:
         </div>
 
         <p class="callout-line fragment fade-in" style="margin-top: 0.8em;">
-          Una cuenta AWS · región <strong>us-east-1</strong> · aislamiento por IAM y tags.
+          Cuenta AWS por ambiente · región <strong>us-east-1</strong> · aislamiento por frontera de cuenta.
         </p>
 
         <aside class="notes">
@@ -609,10 +609,11 @@ jobs:
           y ambientes. La regla es simple — GitFlow define las ramas, y cada rama decide a qué
           ambiente despliega. Develop va a DEV automático, ahí experimentamos. Release ramas
           van a STG con aprobación manual para validar. Main solo entra a PROD con required
-          reviewers. Hotfix tiene su propio carril acelerado a PROD. Una sola cuenta AWS,
-          región us-east-1, aislamiento por IAM y tags. Hoy nada de esto está construido — son los stacks que
-          vamos a levantar en Fase 1 junto con OIDC. La importancia de cerrar los ADR-0002 y
-          0003 está en que sin esto, cada equipo va a inventar su propia convención de ramas.
+          reviewers. Hotfix tiene su propio carril acelerado a PROD. Tres ambientes, una cuenta
+          AWS por ambiente bajo la OU Skorify (DEV, STG, PROD), región us-east-1, aislamiento
+          por frontera de cuenta. Hoy nada de esto está construido — son los stacks que vamos a
+          levantar en Fase 1 junto con OIDC. La importancia de cerrar los ADR-0002 y 0003 está
+          en que sin esto, cada equipo va a inventar su propia convención de ramas.
         </aside>
       </section>
 
