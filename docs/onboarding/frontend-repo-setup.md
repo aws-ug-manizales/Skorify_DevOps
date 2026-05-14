@@ -26,13 +26,13 @@ Guía paso a paso para conectar el repo `Skorify_Frontend` a las plantillas cent
    - Required status checks (los nombres exactos se definen cuando los workflows existan).
 
 2. **GitHub Environments**
-   - Crear `development`, `staging`, `production`.
-   - En `production`: required reviewers (los líderes definidos en ADR-0003 general).
+   - Crear `dev`, `stg`, `prd`. **Los nombres importan**: el rol `skorify-frontend-infra` (deploy de infra vía CDK) tiene la trust policy condicionada al `sub` `repo:aws-ug-manizales/Skorify_Frontend:environment:{dev|stg|prd}`, así que el job que hace `cdk deploy` debe declarar exactamente uno de esos nombres en `environment:` o el AssumeRole falla. Ver ADR-INFRA-0003 y ADR-INFRA-0005.
+   - En cada environment: branch policy (`develop` para `dev`, `release/*` para `stg`, `main`/`hotfix/*` para `prd`, según ADR-CICD-0003) y, al menos en `prd`, required reviewers (los líderes definidos en ADR-INFRA-0003).
    - Configurar secrets necesarios por ambiente (ver ADR-INFRA-0007).
 
 3. **Workflows wrapper**
    - Crear `.github/workflows/ci.yml` que invoque `aws-ug-manizales/Skorify_DevOps/.github/workflows/frontend-ci.yml@vX`.
-   - Crear `.github/workflows/cd-dev.yml`, `cd-staging.yml`, `cd-prod.yml` con los reusable correspondientes.
+   - Crear `.github/workflows/cd-dev.yml`, `cd-staging.yml`, `cd-prod.yml` con los reusable correspondientes. El job que despliega infra (`cdk deploy`) debe declarar `environment: dev|stg|prd` (ver paso 2); el job que sincroniza assets a S3 no usa environment.
    - Pasar inputs requeridos por las plantillas.
 
 4. **Pre-commit**
