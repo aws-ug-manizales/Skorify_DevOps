@@ -21,3 +21,4 @@
 | [0009](./0009-estado-fase0-y-plan-migracion-aws.md) | Estado fase 0 y plan de migración a AWS | Propuesto |
 | [0010](./0010-skorify-data-como-libreria.md) | Skorify_Data como librería consumida vía Git | Propuesto |
 | [0011](./0011-organizations-cuentas-y-ous-en-iac.md) | AWS Organization, cuentas y OUs gestionadas como IaC | Aceptado |
+| [0012](./0012-iam-identity-center-grupos-permission-sets.md) | IAM Identity Center: grupos, permission sets y assignments | Aceptado |
