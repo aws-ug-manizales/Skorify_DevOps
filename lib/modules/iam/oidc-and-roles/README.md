@@ -102,10 +102,10 @@ Definida en `lib/config/iam-roles-config.ts`. Una función por contexto:
 
 | Cuenta | Función | Roles |
 |---|---|---|
-| Master (`746669207643`) | `rolesForMaster()` | `awsug-pagina-web-deploy` |
-| DEV (`968306633562`) | `rolesForSkorifyAccount(id, 'dev')` | `skorify-{backend,frontend,data,infra}-deploy`, `skorify-ops-readonly` |
-| STG (`553284493694`) | `rolesForSkorifyAccount(id, 'stg')` | mismos 5 |
-| PROD (`151646410766`) | `rolesForSkorifyAccount(id, 'prd')` | mismos 5 |
+| Master (`746669207643`) | `rolesForMaster()` | `awsug-pagina-web-deploy`, `awsug-pagina-web-infra` |
+| DEV (`968306633562`) | `rolesForSkorifyAccount(id, 'dev')` | `skorify-backend-deploy`, `skorify-frontend-deploy`, `skorify-frontend-infra`, `skorify-data-deploy`, `skorify-infra-deploy`, `skorify-ops-readonly` |
+| STG (`553284493694`) | `rolesForSkorifyAccount(id, 'stg')` | mismos 6 |
+| PROD (`151646410766`) | `rolesForSkorifyAccount(id, 'prd')` | mismos 6 |
 
 Branch patterns por ambiente (ADR-CICD-0003):
 
@@ -114,9 +114,12 @@ Branch patterns por ambiente (ADR-CICD-0003):
 | dev | `ref:refs/heads/develop` |
 | stg | `ref:refs/heads/release/*` |
 | prd | `ref:refs/heads/main`, `ref:refs/heads/hotfix/*` |
-| master (Pagina_Web) | `ref:refs/heads/main` |
+| master (`awsug-pagina-web-deploy`) | `ref:refs/heads/main` |
 
-`skorify-ops-readonly` es excepción: acepta `ref:refs/heads/*` porque son workflows de SRE que solo leen y pueden correr desde cualquier rama.
+Excepciones a los branch patterns:
+
+- `skorify-ops-readonly`: acepta `ref:refs/heads/*` (workflows de SRE solo lectura, corren desde cualquier rama).
+- Roles `-infra` (`skorify-frontend-infra`, `awsug-pagina-web-infra`): su job declara `environment:`, así que GitHub emite el `sub` como `repo:ORG/REPO:environment:NAME` y la trust usa ese patrón (`environment:dev|stg|prd` para el frontend, `environment:production` para Pagina_Web). La rama y los required reviewers los impone el GitHub Environment, no la trust policy. Ver [referencia OIDC de GitHub](https://docs.github.com/en/actions/reference/security/oidc#example-subject-claims).
 
 ---
 
@@ -125,8 +128,10 @@ Branch patterns por ambiente (ADR-CICD-0003):
 Validados contra el código real de cada repo (sesión 2026-05-10):
 
 - **`awsug-pagina-web-deploy`** (master): S3 sync sobre `web-aws-group-manizales`, CloudFront invalidate sobre `E3OT8P8FKMB7Q7`. **Realidad confirmada**.
+- **`awsug-pagina-web-infra`** (master): `terraform apply` de la infra de Pagina_Web. Bucket config, CloudFront, ACM read, read/write sobre el bucket de state `aws-ug-manizales-tf-state-746669207643`. Alto privilegio; trust `sub = repo:aws-ug-manizales/Pagina_Web:environment:production`, así que solo se asume desde el job que declara `environment: production` (required reviewers + branch policy de `main` los pone el Environment).
 - **`skorify-backend-deploy`**: SAM serverless. Lambda + API Gateway + CloudWatch Logs + CW Metrics + X-Ray + IAM PassRole + SSM. **Acotado a lo que existe**: SAM templates en `Skorify_Backend/builders/.../sam.template.yaml`. SQS/SNS/EventBridge/DynamoDB **no incluidos** todavía; agregar cuando aparezcan en el código.
-- **`skorify-frontend-deploy`**: hosting TBD (S3+CF asumido). Next.js 14/15 sin decisión de hosting AWS. Si se elige Amplify, agregar `amplify:*` sobre `skorify-frontend-*`.
+- **`skorify-frontend-deploy`**: assets-only (SSG en S3, ADR-INFRA-0003). `s3:Put/Get/DeleteObject/ListBucket` sobre `skorify-frontend-*` + `cloudfront:CreateInvalidation/GetInvalidation`. NO gestiona infra.
+- **`skorify-frontend-infra`**: `cdk deploy` de la infra del frontend (stack `skorify-frontend-{env}`: bucket privado + CloudFront OAC + response headers + error pages, y Route53/ACM cuando haya dominio). `sts:AssumeRole` sobre `cdk-hnb659fds-*`, CloudFormation sobre `skorify-frontend-*` + `CDKToolkit`, config del bucket `skorify-frontend-*` (no objetos), CloudFront, Route53, ACM, CDK assets bucket. Alto privilegio; trust `sub = repo:aws-ug-manizales/Skorify_Frontend:environment:{dev|stg|prd}` — el job `cdk-deploy-infra` declara `environment:` y el GitHub Environment impone reviewers + branch policy.
 - **`skorify-data-deploy`**: librería de migrations contra Postgres. Secrets Manager (creds), RDS Describe, VPC describe, CloudFormation `skorify-data-*`. **Sin Lambda/SQS** todavía (el módulo es migrations runner, no servicio).
 - **`skorify-infra-deploy`**: CDK del repo `Skorify_DevOps` (stack base `skorify-infra` + `skorify-infra-*` de módulos compartidos). `sts:AssumeRole` sobre los roles bootstrap `cdk-hnb659fds-*` (CDK con `DefaultStackSynthesizer` los asume para lookups, publicación de assets y el changeset), CloudFormation sobre `skorify-infra/*`, `skorify-infra-*/*` y `CDKToolkit/*`, IAM sobre roles `skorify-infra-*`, CDK assets bucket, SSM `/skorify/`. **No** puede gestionar los roles del bootstrap ni los OIDC providers: ese stack se aplica desde fuera del CI (humano con SSO Admin). Separación de responsabilidades. Nota: el `cdk-hnb659fds-cfn-exec-role` que ejecuta el changeset tiene `AdministratorAccess` por default del bootstrap; acotarlo requiere rehacer el bootstrap con `--cloudformation-execution-policies`.
 - **`skorify-ops-readonly`**: lectura CloudWatch/Logs/X-Ray sobre `*`.

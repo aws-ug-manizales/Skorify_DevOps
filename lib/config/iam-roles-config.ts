@@ -15,6 +15,13 @@
  * - prd: `ref:refs/heads/main`, `ref:refs/heads/hotfix/*`
  * - master (Pagina_Web): `ref:refs/heads/main`
  * - ops-readonly: `ref:refs/heads/*` (workflows de SRE solo lectura)
+ *
+ * Excepción: los roles `-infra` (cdk/terraform apply de infra) se asumen
+ * desde jobs que declaran un GitHub Environment, así que GitHub emite el
+ * `sub` como `repo:ORG/REPO:environment:NAME` (no `ref:...`). Su trust
+ * usa ese patrón; la restricción de rama y los required reviewers los
+ * impone el Environment vía `deployment_branch_policy` y `required_reviewers`.
+ * Ver https://docs.github.com/en/actions/reference/security/oidc#example-subject-claims
  */
 
 import type { DeployRoleDefinition, GitHubSubPattern } from '../modules/iam/oidc-and-roles/main';
@@ -23,6 +30,7 @@ import {
   skorifyBackendDeployStatements,
   skorifyDataDeployStatements,
   skorifyFrontendDeployStatements,
+  skorifyFrontendInfraStatements,
   skorifyInfraDeployStatements,
   skorifyOpsReadonlyStatements,
   paginaWebInfraStatements,
@@ -69,10 +77,12 @@ export function rolesForMaster(): DeployRoleDefinition[] {
       logicalName: 'AwsUgPaginaWebInfra',
       roleName: 'awsug-pagina-web-infra',
       repoName: REPOS.paginaWeb,
-      // Solo en merge a main; el workflow además lo pone detrás del
-      // GitHub Environment `production` con required reviewers.
-      subPatterns: ['ref:refs/heads/main'],
-      description: 'terraform apply de la infra de Pagina_Web (CloudFront, config del bucket, OAC, response headers policy) desde main.',
+      // El job `terraform-apply` declara `environment: production`, así que
+      // GitHub emite el sub como `...:environment:production`. El Environment
+      // ya tiene required reviewers y branch policy de `main`; la trust solo
+      // ata el rol a ese Environment.
+      subPatterns: ['environment:production'],
+      description: 'terraform apply de la infra de Pagina_Web (CloudFront, config del bucket, OAC, response headers policy), detrás del Environment production.',
       statements: paginaWebInfraStatements(),
     },
   ];
@@ -83,9 +93,11 @@ export function rolesForMaster(): DeployRoleDefinition[] {
 // ============================================================
 
 /**
- * Set de 5 roles para una cuenta workload Skorify: backend, frontend,
- * data, infra, ops-readonly. Cada rol con sus branch patterns según el
- * ambiente.
+ * Set de 6 roles para una cuenta workload Skorify: backend, frontend
+ * (deploy de assets), frontend-infra (cdk deploy de la infra del
+ * frontend), data, infra, ops-readonly. Los roles de deploy usan los
+ * branch patterns del ambiente; `frontend-infra` usa `environment:${env}`
+ * (el job lo declara) y `ops-readonly` acepta cualquier rama.
  */
 export function rolesForSkorifyAccount(
   accountId: string,
@@ -107,8 +119,19 @@ export function rolesForSkorifyAccount(
       roleName: 'skorify-frontend-deploy',
       repoName: REPOS.frontend,
       subPatterns,
-      description: `Deploy de Skorify frontend (Next.js a S3+CloudFront) en cuenta ${env}.`,
+      description: `Sync de assets del frontend Skorify (next export a S3 + CloudFront invalidate) en cuenta ${env}.`,
       statements: skorifyFrontendDeployStatements(accountId),
+    },
+    {
+      logicalName: 'SkorifyFrontendInfra',
+      roleName: 'skorify-frontend-infra',
+      repoName: REPOS.frontend,
+      // El job `cdk-deploy-infra` declara `environment: ${env}`, así que el
+      // sub que emite GitHub es `...:environment:${env}` (no `ref:...`). El
+      // Environment impone los required reviewers y la branch policy.
+      subPatterns: [`environment:${env}`],
+      description: `cdk deploy de la infra del frontend Skorify (S3+CloudFront+OAC, ADR-INFRA-0003), detrás del Environment ${env}.`,
+      statements: skorifyFrontendInfraStatements(accountId),
     },
     {
       logicalName: 'SkorifyDataDeploy',
@@ -157,7 +180,7 @@ export const SKORIFY_ACCOUNT_TO_ENV: Record<string, SkorifyAccountEnv> = {
 /**
  * Devuelve el set de roles aplicable a la cuenta activa, o `undefined`
  * si la cuenta no está en el modelo Skorify. La master usa su propio
- * set de Pagina_Web; las cuentas workload usan los 5 roles Skorify.
+ * set de Pagina_Web; las cuentas workload usan los 6 roles Skorify.
  */
 export function rolesForAccount(accountId: string): DeployRoleDefinition[] | undefined {
   if (accountId === MANAGEMENT_ACCOUNT_ID) {

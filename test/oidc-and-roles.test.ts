@@ -264,48 +264,104 @@ describe('OidcAndRolesModule: validaciones', () => {
 // ============================================================
 
 describe('iam-roles-config: matriz de roles', () => {
-  test('rolesForMaster contiene awsug-pagina-web-deploy y awsug-pagina-web-infra', () => {
+  test('rolesForMaster contiene awsug-pagina-web-deploy (rama) y awsug-pagina-web-infra (environment)', () => {
     const roles = rolesForMaster();
     const names = roles.map((r) => r.roleName).sort();
     expect(names).toEqual(['awsug-pagina-web-deploy', 'awsug-pagina-web-infra']);
     for (const role of roles) {
       expect(role.repoName).toBe(REPOS.paginaWeb);
-      expect(role.subPatterns).toEqual(['ref:refs/heads/main']);
     }
+    // assets-only: trust por rama (main).
+    const deploy = roles.find((r) => r.roleName === 'awsug-pagina-web-deploy')!;
+    expect(deploy.subPatterns).toEqual(['ref:refs/heads/main']);
+    // infra: trust por GitHub Environment, el job declara `environment: production`.
+    const infra = roles.find((r) => r.roleName === 'awsug-pagina-web-infra')!;
+    expect(infra.subPatterns).toEqual(['environment:production']);
   });
 
   test('awsug-pagina-web-infra tiene acceso al bucket de state y a CloudFront, sin tocar objetos S3', () => {
     const infra = rolesForMaster().find((r) => r.roleName === 'awsug-pagina-web-infra')!;
-    const json = infra.statements.map((s) => s.toStatementJson());
-    const sids = json.map((s: { Sid?: string }) => s.Sid);
+    const json = infra.statements.map((s) => s.toStatementJson() as { Sid?: string; Action: string | string[]; Resource: string | string[] });
+    const sids = json.map((s) => s.Sid);
 
     expect(sids).toEqual(
       expect.arrayContaining([
         'TerraformStateBucket',
         'TerraformStateObjects',
         'PaginaWebBucketConfig',
-        'CloudFrontInfra',
+        'CloudFrontInfraGlobal',
+        'CloudFrontInfraResources',
         'AcmRead',
       ]),
     );
 
     // El statement del bucket de Pagina_Web es sobre el bucket, no sobre objetos.
-    const bucketCfg = json.find((s: { Sid?: string }) => s.Sid === 'PaginaWebBucketConfig');
-    const resources = Array.isArray(bucketCfg!.Resource) ? bucketCfg!.Resource : [bucketCfg!.Resource];
-    expect(resources).toContain('arn:aws:s3:::web-aws-group-manizales');
-    expect(resources.every((r: string) => !r.endsWith('/*'))).toBe(true);
+    const bucketCfg = json.find((s) => s.Sid === 'PaginaWebBucketConfig')!;
+    const bucketResources = Array.isArray(bucketCfg.Resource) ? bucketCfg.Resource : [bucketCfg.Resource];
+    expect(bucketResources).toContain('arn:aws:s3:::web-aws-group-manizales');
+    expect(bucketResources.every((r: string) => !r.endsWith('/*'))).toBe(true);
+
+    // Las acciones cloudfront:Create*/List* sin resource type van con Resource "*".
+    const cfGlobal = json.find((s) => s.Sid === 'CloudFrontInfraGlobal')!;
+    const cfActions = Array.isArray(cfGlobal.Action) ? cfGlobal.Action : [cfGlobal.Action];
+    expect(cfActions).toEqual(expect.arrayContaining(['cloudfront:CreateDistribution', 'cloudfront:ListDistributions']));
+    expect(cfGlobal.Resource).toBe('*');
+    // El resto de cloudfront sí va con ARNs específicos.
+    const cfRes = json.find((s) => s.Sid === 'CloudFrontInfraResources')!;
+    const cfResArns = Array.isArray(cfRes.Resource) ? cfRes.Resource : [cfRes.Resource];
+    expect(cfResArns.every((r: string) => r.startsWith('arn:aws:cloudfront::'))).toBe(true);
   });
 
-  test('rolesForSkorifyAccount produce los 5 roles del dominio', () => {
+  test('rolesForSkorifyAccount produce los 6 roles del dominio', () => {
     const roles = rolesForSkorifyAccount('968306633562', 'dev');
     const names = roles.map((r) => r.roleName).sort();
     expect(names).toEqual([
       'skorify-backend-deploy',
       'skorify-data-deploy',
       'skorify-frontend-deploy',
+      'skorify-frontend-infra',
       'skorify-infra-deploy',
       'skorify-ops-readonly',
     ]);
+  });
+
+  test('skorify-frontend-deploy es assets-only; skorify-frontend-infra gestiona la infra', () => {
+    const roles = rolesForSkorifyAccount('968306633562', 'dev');
+    const deploy = roles.find((r) => r.roleName === 'skorify-frontend-deploy')!;
+    const infra = roles.find((r) => r.roleName === 'skorify-frontend-infra')!;
+
+    const deploySids = deploy.statements.map((s) => (s.toStatementJson() as { Sid?: string }).Sid);
+    // deploy: solo S3 sobre el bucket + CloudFront invalidate. Nada de cloudformation ni crear infra.
+    expect(deploySids.sort()).toEqual([
+      'InvalidateFrontendDistribution',
+      'ListFrontendBucket',
+      'WriteFrontendBucketObjects',
+    ]);
+
+    const infraJson = infra.statements.map((s) => s.toStatementJson() as { Sid?: string; Action: string | string[]; Resource: string | string[] });
+    const infraSids = infraJson.map((s) => s.Sid);
+    expect(infraSids).toEqual(
+      expect.arrayContaining([
+        'AssumeCdkBootstrapRoles',
+        'CloudFormationFrontendStacks',
+        'FrontendBucketConfig',
+        'CloudFrontFrontendGlobal',
+        'CloudFrontFrontendResources',
+        'Route53Frontend',
+        'AcmFrontend',
+        'CdkAssetsFrontendInfra',
+      ]),
+    );
+    // El statement del bucket del infra-deploy es sobre el bucket, no sobre objetos.
+    const bucketCfg = infraJson.find((s) => s.Sid === 'FrontendBucketConfig')!;
+    const resources = Array.isArray(bucketCfg.Resource) ? bucketCfg.Resource : [bucketCfg.Resource];
+    expect(resources.every((r: string) => !r.endsWith('/*'))).toBe(true);
+    // cloudfront:Create*/List* (sin resource type) van con Resource "*"; el resto con ARN.
+    const cfGlobal = infraJson.find((s) => s.Sid === 'CloudFrontFrontendGlobal')!;
+    expect(cfGlobal.Resource).toBe('*');
+    const cfRes = infraJson.find((s) => s.Sid === 'CloudFrontFrontendResources')!;
+    const cfResArns = Array.isArray(cfRes.Resource) ? cfRes.Resource : [cfRes.Resource];
+    expect(cfResArns.every((r: string) => r.startsWith('arn:aws:cloudfront::'))).toBe(true);
   });
 
   test('sub pattern es ref:refs/heads/develop en dev', () => {
@@ -333,6 +389,17 @@ describe('iam-roles-config: matriz de roles', () => {
     const roles = rolesForSkorifyAccount('968306633562', 'dev');
     const ops = roles.find((r) => r.roleName === 'skorify-ops-readonly')!;
     expect(ops.subPatterns).toEqual(['ref:refs/heads/*']);
+  });
+
+  test('skorify-frontend-infra usa sub por environment, no por rama', () => {
+    for (const [account, env] of Object.entries(SKORIFY_ACCOUNT_TO_ENV)) {
+      const roles = rolesForSkorifyAccount(account, env);
+      const infra = roles.find((r) => r.roleName === 'skorify-frontend-infra')!;
+      expect(infra.subPatterns).toEqual([`environment:${env}`]);
+      // El de assets sí va por rama.
+      const deploy = roles.find((r) => r.roleName === 'skorify-frontend-deploy')!;
+      expect(deploy.subPatterns.every((p) => p.startsWith('ref:refs/heads/'))).toBe(true);
+    }
   });
 
   test('todas las cuentas Skorify están en el map de cuenta a env', () => {
@@ -413,7 +480,7 @@ describe('SkorifyBootstrapStack: materialización por cuenta activa', () => {
     expect(deployRoleNames(template, 'skorify-')).toEqual([]);
   });
 
-  test('en cada cuenta Skorify crea los 5 roles del dominio (sin pagina-web)', () => {
+  test('en cada cuenta Skorify crea los 6 roles del dominio (sin pagina-web)', () => {
     for (const [account, env] of Object.entries(SKORIFY_ACCOUNT_TO_ENV)) {
       const app = new cdk.App();
       const stack = maybeCreateSkorifyBootstrapStack(app, { currentAccount: account })!;
@@ -423,6 +490,7 @@ describe('SkorifyBootstrapStack: materialización por cuenta activa', () => {
         'skorify-backend-deploy',
         'skorify-data-deploy',
         'skorify-frontend-deploy',
+        'skorify-frontend-infra',
         'skorify-infra-deploy',
         'skorify-ops-readonly',
       ]);

@@ -28,16 +28,18 @@ OIDC es la decisión obvia. Lo no obvio es la **topología**: dado que `ADR-INFR
 
 Adoptamos **OIDC con topología descentralizada (opción B)**.
 
-1. **OIDC providers**: cada cuenta de la organización (master `746669207643`, DEV `968306633562`, STG cuenta nueva, PROD `151646410766`) tiene su propio `iam_openid_connect_provider` para `token.actions.githubusercontent.com`. El thumbprint y el client-id (`sts.amazonaws.com`) son idénticos en las 4. Gestionados desde `lib/modules/iam/oidc-and-roles/` del CDK de `Skorify_DevOps`.
+1. **OIDC providers**: cada cuenta de la organización (master `746669207643`, DEV `968306633562`, STG `553284493694`, PROD `151646410766`) tiene su propio OIDC provider para `token.actions.githubusercontent.com`. El client-id (`sts.amazonaws.com`) es idéntico en las 4. Gestionados desde `lib/modules/iam/oidc-and-roles/` del CDK de `Skorify_DevOps` (el L2 `OpenIdConnectProvider` de CDK lo crea como custom resource, no como `AWS::IAM::OIDCProvider` nativo).
 
-2. **Roles por dominio y cuenta**: un rol por dominio funcional, en cada cuenta donde tenga sentido aplicar. Naming `skorify-{dominio}-deploy` en cuentas de workload Skorify; `awsug-pagina-web-deploy` en la cuenta master/UG.
+2. **Roles por dominio y cuenta**: un rol por dominio funcional, en cada cuenta donde tenga sentido aplicar. Naming `skorify-{dominio}-deploy` en cuentas de workload Skorify; `awsug-pagina-web-deploy` en la cuenta master/UG. Algunos dominios tienen además un rol `-infra` de alto privilegio (`cdk`/`terraform apply` de su infra), separado del de deploy de assets.
 
    | Cuenta | Roles |
    |---|---|
-   | Master/UG | `awsug-pagina-web-deploy` |
-   | DEV | `skorify-backend-deploy`, `skorify-frontend-deploy`, `skorify-data-deploy`, `skorify-infra-deploy`, `skorify-ops-readonly` |
+   | Master/UG | `awsug-pagina-web-deploy`, `awsug-pagina-web-infra` |
+   | DEV | `skorify-backend-deploy`, `skorify-frontend-deploy`, `skorify-frontend-infra`, `skorify-data-deploy`, `skorify-infra-deploy`, `skorify-ops-readonly` |
    | STG | mismos que DEV |
    | PROD | mismos que DEV |
+
+   (`skorify-frontend-infra` y el rol de Pagina_Web `awsug-pagina-web-infra` se detallan en ADR-INFRA-0003 y en la CI de Pagina_Web respectivamente.)
 
 3. **Trust policy de cada rol**: condicionada al `sub` del JWT de GitHub. La condición sigue el mapeo rama a ambiente del `ADR-CICD-0003`:
 
@@ -47,22 +49,28 @@ Adoptamos **OIDC con topología descentralizada (opción B)**.
    | STG | `repo:aws-ug-manizales/<repo-del-dominio>:ref:refs/heads/release/*` |
    | PROD (main) | `repo:aws-ug-manizales/<repo-del-dominio>:ref:refs/heads/main` |
    | PROD (hotfix) | `repo:aws-ug-manizales/<repo-del-dominio>:ref:refs/heads/hotfix/*` |
-   | Master | `repo:aws-ug-manizales/Pagina_Web:ref:refs/heads/main` |
+   | Master (`awsug-pagina-web-deploy`) | `repo:aws-ug-manizales/Pagina_Web:ref:refs/heads/main` |
 
-   Adicionalmente: `Condition StringEquals` para `token.actions.githubusercontent.com:aud = sts.amazonaws.com`. Sin condiciones adicionales por tag, ARN o environment hasta que haya razón concreta.
+   **Excepción para los roles `-infra`**: su workflow declara un GitHub Environment (required reviewers + branch policy), y al hacerlo GitHub emite el `sub` como `repo:ORG/REPO:environment:NAME`, no `ref:refs/heads/...` ([referencia OIDC de GitHub](https://docs.github.com/en/actions/reference/security/oidc#example-subject-claims)). Su trust usa ese patrón: `repo:aws-ug-manizales/Skorify_Frontend:environment:{dev|stg|prd}` y `repo:aws-ug-manizales/Pagina_Web:environment:production`. El control de rama y la aprobación humana los hace el Environment; la trust solo ata el rol a él.
+
+   `skorify-ops-readonly` es la otra excepción: `ref:refs/heads/*` (workflows de SRE solo lectura).
+
+   Adicionalmente: `Condition StringEquals` para `token.actions.githubusercontent.com:aud = sts.amazonaws.com`. Sin condiciones por tag o ARN hasta que haya razón concreta.
 
 4. **Permisos por rol**: política IAM **inline** (no managed) por rol, escrita explícitamente en el módulo CDK. Cero `*:*` y cero `iam:*`. Borrador de permisos por dominio:
 
-   - `awsug-pagina-web-deploy`: `s3:ListBucket/PutObject/DeleteObject/GetObject` sobre `web-aws-group-manizales`, `cloudfront:CreateInvalidation` sobre la distribución `E3OT8P8FKMB7Q7`.
+   - `awsug-pagina-web-deploy`: `s3:ListBucket/PutObject/DeleteObject/GetObject` sobre `web-aws-group-manizales`, `cloudfront:CreateInvalidation` sobre la distribución del sitio.
+   - `awsug-pagina-web-infra`: `terraform apply` de la infra de Pagina_Web. Config del bucket (no objetos), CloudFront, ACM read, read/write sobre el bucket de state de Terraform.
    - `skorify-backend-deploy`: SAM/CloudFormation, Lambda, API Gateway, CloudWatch Logs, IAM `PassRole` acotado a roles de Lambda del proyecto (`role/skorify-lambda-*`).
-   - `skorify-frontend-deploy`: S3 sync sobre el bucket de frontend del ambiente, CloudFront invalidation.
+   - `skorify-frontend-deploy`: S3 sync sobre el bucket de frontend del ambiente, CloudFront invalidation. Assets-only, sin tocar infra.
+   - `skorify-frontend-infra`: `cdk deploy` de la infra del frontend (S3 + CloudFront + OAC + Route53/ACM). `sts:AssumeRole` sobre los roles bootstrap `cdk-hnb659fds-*`, CloudFormation sobre `skorify-frontend-*`. Ver ADR-INFRA-0003.
    - `skorify-data-deploy`: RDS describe, Secrets Manager read, S3 sobre el bucket de datos del ambiente.
    - `skorify-infra-deploy`: CloudFormation, IAM con condiciones de path, S3 sobre el bucket `cdk-assets`.
    - `skorify-ops-readonly`: `cloudwatch:Get*/Describe*/List*`, `logs:Get*/Describe*/Filter*`, `xray:Get*/BatchGet*`. Sin write a recursos.
 
    Cada lista anterior es un punto de partida; los permisos finales se revisan en el PR del módulo de roles (#43).
 
-5. **Session name**: `gh-actions-${{ github.repository_id }}-${{ github.run_id }}`. Permite trazar cada llamada a CloudTrail hasta el run específico.
+5. **Session name**: `gh-${{ github.repository_id }}-${{ github.run_id }}`. Permite trazar cada llamada a CloudTrail hasta el run específico.
 
 6. **Composite action centralizado**: `actions/setup-aws-credentials` en `Skorify_DevOps` resuelve el ARN del rol a partir de `environment` y `domain`, y llama a `aws-actions/configure-aws-credentials@v6`. Cualquier repo de la organización lo consume con `uses: aws-ug-manizales/Skorify_DevOps/actions/setup-aws-credentials@<sha>`. Ver issue #44.
 

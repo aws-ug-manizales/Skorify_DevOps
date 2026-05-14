@@ -98,28 +98,39 @@ export function paginaWebInfraStatements(): iam.PolicyStatement[] {
       resources: [`arn:aws:s3:::${PAGINA_WEB_BUCKET}`],
     }),
     new iam.PolicyStatement({
-      sid: 'CloudFrontInfra',
+      sid: 'CloudFrontInfraGlobal',
+      // Estas acciones no tienen resource type en la CloudFront Service
+      // Authorization Reference: solo se autorizan con Resource "*". Crear
+      // distros/OAC/response-headers-policy y listar (el ID no existe
+      // hasta crearlo, así que no hay ARN que poner).
+      actions: [
+        'cloudfront:CreateDistribution',
+        'cloudfront:CreateDistributionWithTags',
+        'cloudfront:CreateOriginAccessControl',
+        'cloudfront:CreateResponseHeadersPolicy',
+        'cloudfront:ListDistributions',
+        'cloudfront:ListOriginAccessControls',
+        'cloudfront:ListResponseHeadersPolicies',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CloudFrontInfraResources',
       // CloudFront es global; los ARNs llevan el accountId. Gestionar la
-      // distro, los OAC y las response headers policies de la cuenta.
+      // distro, los OAC y las response headers policies ya creados.
       actions: [
         'cloudfront:GetDistribution',
         'cloudfront:GetDistributionConfig',
         'cloudfront:UpdateDistribution',
-        'cloudfront:CreateDistribution',
         'cloudfront:TagResource',
         'cloudfront:UntagResource',
         'cloudfront:ListTagsForResource',
         'cloudfront:GetOriginAccessControl',
         'cloudfront:GetOriginAccessControlConfig',
-        'cloudfront:CreateOriginAccessControl',
         'cloudfront:UpdateOriginAccessControl',
-        'cloudfront:ListOriginAccessControls',
         'cloudfront:GetResponseHeadersPolicy',
         'cloudfront:GetResponseHeadersPolicyConfig',
-        'cloudfront:CreateResponseHeadersPolicy',
         'cloudfront:UpdateResponseHeadersPolicy',
-        'cloudfront:ListResponseHeadersPolicies',
-        'cloudfront:ListDistributions',
       ],
       resources: [
         `arn:aws:cloudfront::${PAGINA_WEB_ACCOUNT}:distribution/*`,
@@ -272,53 +283,160 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
 }
 
 // ============================================================
-// Frontend Skorify (Next.js, hosting por confirmar)
+// Frontend Skorify (Next.js SSG en S3+CloudFront, ADR-INFRA-0003)
 // ============================================================
 
 /**
- * `skorify-frontend-deploy`. Repo `aws-ug-manizales/Skorify_Frontend`
- * es Next.js 14/15 (con `next-intl`, MUI). El hosting AWS aún no está
- * decidido en código: las opciones razonables son S3+CloudFront (SSG)
- * o AWS Amplify (SSR/ISR). Este set asume SSG+S3+CF; si se elige
- * Amplify, agregar el permiso `amplify:*` sobre apps con prefix
- * `skorify-frontend-*` en un PR de seguimiento.
+ * `skorify-frontend-deploy`. Rol del workflow para sincronizar los
+ * artefactos del export estático: `next build && next export` y luego
+ * `aws s3 sync out/ s3://skorify-frontend-{env}` + `cloudfront
+ * create-invalidation`. Bajo privilegio, uso frecuente. NO gestiona
+ * infra (eso es de `skorify-frontend-infra`).
  */
 export function skorifyFrontendDeployStatements(accountId: string): iam.PolicyStatement[] {
   return [
+    new iam.PolicyStatement({
+      sid: 'ListFrontendBucket',
+      actions: ['s3:ListBucket'],
+      resources: [`arn:aws:s3:::skorify-frontend-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'WriteFrontendBucketObjects',
+      actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
+      resources: [`arn:aws:s3:::skorify-frontend-*/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'InvalidateFrontendDistribution',
+      actions: ['cloudfront:CreateInvalidation', 'cloudfront:GetInvalidation'],
+      resources: [`arn:aws:cloudfront::${accountId}:distribution/*`],
+    }),
+  ];
+}
+
+/**
+ * `skorify-frontend-infra`. Rol del workflow para `cdk deploy` de la
+ * infra del frontend (stack `skorify-frontend-{env}`: bucket privado,
+ * CloudFront con OAC, response headers policy, error pages, y Route53/
+ * ACM cuando haya dominio). Alto privilegio, uso raro: el workflow del
+ * frontend lo pone detrás de un GitHub Environment con required
+ * reviewers. No gestiona los objetos del bucket (esos los sincroniza
+ * `skorify-frontend-deploy`). Ver ADR-INFRA-0003.
+ */
+export function skorifyFrontendInfraStatements(accountId: string): iam.PolicyStatement[] {
+  return [
+    new iam.PolicyStatement({
+      sid: 'AssumeCdkBootstrapRoles',
+      actions: ['sts:AssumeRole'],
+      resources: [`arn:aws:iam::${accountId}:role/cdk-hnb659fds-*-${accountId}-*`],
+    }),
     new iam.PolicyStatement({
       sid: 'CloudFormationFrontendStacks',
       actions: ['cloudformation:*'],
       resources: [
         `arn:aws:cloudformation:*:${accountId}:stack/skorify-frontend/*`,
         `arn:aws:cloudformation:*:${accountId}:stack/skorify-frontend-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/CDKToolkit/*`,
       ],
     }),
     new iam.PolicyStatement({
-      sid: 'FrontendBuckets',
-      actions: ['s3:*'],
-      resources: [`arn:aws:s3:::skorify-frontend-*`, `arn:aws:s3:::skorify-frontend-*/*`],
-    }),
-    new iam.PolicyStatement({
-      sid: 'CloudFrontInvalidate',
+      sid: 'FrontendBucketConfig',
+      // Gestionar el bucket y su configuración; no objetos.
       actions: [
-        'cloudfront:CreateInvalidation',
-        'cloudfront:GetInvalidation',
-        'cloudfront:ListInvalidations',
+        's3:CreateBucket',
+        's3:DeleteBucket',
+        's3:GetBucket*',
+        's3:PutBucket*',
+        's3:GetEncryptionConfiguration',
+        's3:PutEncryptionConfiguration',
+        's3:GetBucketPolicy',
+        's3:PutBucketPolicy',
+        's3:DeleteBucketPolicy',
+        's3:ListBucket',
       ],
-      resources: [`arn:aws:cloudfront::${accountId}:distribution/*`],
+      resources: [`arn:aws:s3:::skorify-frontend-*`],
     }),
     new iam.PolicyStatement({
-      sid: 'CdkAssetsFrontend',
-      actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket'],
+      sid: 'CloudFrontFrontendGlobal',
+      // Sin resource type en la CloudFront Service Authorization Reference:
+      // solo se autorizan con Resource "*" (crear/listar; el ID del recurso
+      // no existe antes de crearlo).
+      actions: [
+        'cloudfront:CreateDistribution',
+        'cloudfront:CreateDistributionWithTags',
+        'cloudfront:CreateOriginAccessControl',
+        'cloudfront:CreateResponseHeadersPolicy',
+        'cloudfront:ListDistributions',
+        'cloudfront:ListOriginAccessControls',
+        'cloudfront:ListResponseHeadersPolicies',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CloudFrontFrontendResources',
+      actions: [
+        'cloudfront:GetDistribution',
+        'cloudfront:GetDistributionConfig',
+        'cloudfront:UpdateDistribution',
+        'cloudfront:DeleteDistribution',
+        'cloudfront:TagResource',
+        'cloudfront:UntagResource',
+        'cloudfront:ListTagsForResource',
+        'cloudfront:GetOriginAccessControl',
+        'cloudfront:GetOriginAccessControlConfig',
+        'cloudfront:UpdateOriginAccessControl',
+        'cloudfront:DeleteOriginAccessControl',
+        'cloudfront:GetResponseHeadersPolicy',
+        'cloudfront:GetResponseHeadersPolicyConfig',
+        'cloudfront:UpdateResponseHeadersPolicy',
+        'cloudfront:DeleteResponseHeadersPolicy',
+      ],
+      resources: [
+        `arn:aws:cloudfront::${accountId}:distribution/*`,
+        `arn:aws:cloudfront::${accountId}:origin-access-control/*`,
+        `arn:aws:cloudfront::${accountId}:response-headers-policy/*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'Route53Frontend',
+      // Route53 no soporta resource-level granular para la mayoría de
+      // estas acciones; se acota por la trust policy OIDC.
+      actions: [
+        'route53:GetHostedZone',
+        'route53:ListHostedZones',
+        'route53:ListHostedZonesByName',
+        'route53:CreateHostedZone',
+        'route53:ChangeResourceRecordSets',
+        'route53:ListResourceRecordSets',
+        'route53:GetChange',
+        'route53:ChangeTagsForResource',
+        'route53:ListTagsForResource',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'AcmFrontend',
+      actions: [
+        'acm:DescribeCertificate',
+        'acm:ListCertificates',
+        'acm:ListTagsForCertificate',
+        'acm:RequestCertificate',
+        'acm:AddTagsToCertificate',
+        'acm:DeleteCertificate',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CdkAssetsFrontendInfra',
+      actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket', 's3:DeleteObject'],
       resources: [
         `arn:aws:s3:::cdk-hnb659fds-assets-${accountId}-*`,
         `arn:aws:s3:::cdk-hnb659fds-assets-${accountId}-*/*`,
       ],
     }),
     new iam.PolicyStatement({
-      sid: 'PassFrontendRoles',
-      actions: ['iam:PassRole'],
-      resources: [`arn:aws:iam::${accountId}:role/skorify-frontend-*`],
+      sid: 'SsmBootstrapRead',
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:*:${accountId}:parameter/cdk-bootstrap/*`],
     }),
   ];
 }
