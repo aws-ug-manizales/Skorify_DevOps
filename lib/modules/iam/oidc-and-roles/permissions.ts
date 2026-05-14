@@ -101,11 +101,12 @@ export function paginaWebInfraStatements(): iam.PolicyStatement[] {
       sid: 'CloudFrontInfraGlobal',
       // Estas acciones no tienen resource type en la CloudFront Service
       // Authorization Reference: solo se autorizan con Resource "*". Crear
-      // distros/OAC/response-headers-policy y listar (el ID no existe
-      // hasta crearlo, así que no hay ARN que poner).
+      // distros/OAC/response-headers-policy y listar (el ID no existe hasta
+      // crearlo, así que no hay ARN que poner). Para crear con tags se usa
+      // cloudfront:CreateDistribution + cloudfront:TagResource (este último
+      // está en CloudFrontInfraResources).
       actions: [
         'cloudfront:CreateDistribution',
-        'cloudfront:CreateDistributionWithTags',
         'cloudfront:CreateOriginAccessControl',
         'cloudfront:CreateResponseHeadersPolicy',
         'cloudfront:ListDistributions',
@@ -359,10 +360,11 @@ export function skorifyFrontendInfraStatements(accountId: string): iam.PolicySta
       sid: 'CloudFrontFrontendGlobal',
       // Sin resource type en la CloudFront Service Authorization Reference:
       // solo se autorizan con Resource "*" (crear/listar; el ID del recurso
-      // no existe antes de crearlo).
+      // no existe antes de crearlo). Para crear con tags se usa
+      // cloudfront:CreateDistribution + cloudfront:TagResource (este último
+      // está en CloudFrontFrontendResources).
       actions: [
         'cloudfront:CreateDistribution',
-        'cloudfront:CreateDistributionWithTags',
         'cloudfront:CreateOriginAccessControl',
         'cloudfront:CreateResponseHeadersPolicy',
         'cloudfront:ListDistributions',
