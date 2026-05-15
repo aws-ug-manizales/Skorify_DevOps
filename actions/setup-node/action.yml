@@ -1,31 +1,41 @@
-# =============================================================================
-# Composite action: setup-node
-# Propósito: instalar Node.js con caching consistente entre repos.
-# Owner: equipo CI/CD — @steevensmelo
-# Estado: CASCARÓN — pendiente de implementación
-# =============================================================================
-#
-# Nota sobre package manager: Skorify_Frontend usa yarn; Skorify_Backend y
-# Skorify_Data usan pnpm. La implementación debe soportar al menos pnpm + yarn,
-# o se crean dos actions hermanas. Ver decisión cruzada en ADR-CICD-0010.
-
-name: setup-node
-description: Instala Node.js con cache habilitado para el package manager indicado.
+name: 'Setup Node.js with Cache'
+description: 'Configura Node.js, instala dependencias y configura caché para Yarn'
 
 inputs:
   node-version:
-    description: Versión de Node.js (LTS por defecto).
+    description: 'Versión de Node.js a usar'
     required: false
-    default: '20'
-  package-manager:
-    description: Package manager (pnpm | yarn | npm).
+    default: '18'
+  working-directory:
+    description: 'Directorio donde está el package.json'
     required: false
-    default: pnpm
-  # TODO: declarar inputs adicionales (working-directory, frozen-lockfile, etc.)
+    default: '.'
 
 runs:
-  using: composite
+  using: 'composite'
   steps:
-    # TODO: implementar steps (actions/setup-node, pnpm/action-setup o yarn cache, cache)
-    - shell: bash
-      run: echo "TODO: implementar setup-node con package-manager=${{ inputs.package-manager }}"
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'yarn'
+        cache-dependency-path: ${{ inputs.working-directory }}/yarn.lock
+    
+    - name: Get yarn cache directory
+      id: yarn-cache-dir
+      shell: bash
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      working-directory: ${{ inputs.working-directory }}
+    
+    - name: Cache yarn dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.yarn-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles(format('{0}/yarn.lock', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+    
+    - name: Install dependencies
+      shell: bash
+      run: yarn install --frozen-lockfile
+      working-directory: ${{ inputs.working-directory }}
