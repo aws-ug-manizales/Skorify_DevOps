@@ -29,6 +29,7 @@ import {
   paginaWebDeployStatements,
   skorifyBackendDeployStatements,
   skorifyDataDeployStatements,
+  skorifyDataInfraStatements,
   skorifyFrontendDeployStatements,
   skorifyFrontendInfraStatements,
   skorifyInfraDeployStatements,
@@ -140,6 +141,17 @@ export function rolesForSkorifyAccount(
       subPatterns,
       description: `Deploy de Skorify data (migrations contra RDS) en cuenta ${env}.`,
       statements: skorifyDataDeployStatements(accountId),
+    },
+    {
+      logicalName: 'SkorifyDataInfra',
+      roleName: 'skorify-data-infra',
+      repoName: REPOS.data,
+      // El job `cdk-deploy-infra` declara `environment: ${env}`, así que el
+      // sub que emite GitHub es `...:environment:${env}` (no `ref:...`). El
+      // Environment impone los required reviewers y la branch policy.
+      subPatterns: [`environment:${env}`],
+      description: `cdk deploy de la infra del dominio data Skorify (RDS, VPC, KMS, Secrets) en cuenta ${env}, detrás del Environment ${env}.`,
+      statements: skorifyDataInfraStatements(accountId),
     },
     {
       logicalName: 'SkorifyInfraDeploy',

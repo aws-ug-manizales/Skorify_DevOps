@@ -565,6 +565,248 @@ export function skorifyDataDeployStatements(accountId: string): iam.PolicyStatem
 }
 
 // ============================================================
+// Data Infra Skorify (CDK de la infra del dominio data)
+// ============================================================
+
+/**
+ * `skorify-data-infra`. Rol del workflow para `cdk deploy` de los stacks
+ * `skorifyDatabase` (RDS + RdsScheduler Lambda + EventBridge rules) y
+ * `skorifyEventBridge` (custom bus + 4 reglas + 9 Lambdas + SQS queues +
+ * Step Functions). Excluye el NetworkingStack: la VPC ya existe.
+ *
+ * Alto privilegio, uso raro: el job declara `environment: ${env}`, así que
+ * GitHub emite el sub como `...:environment:${env}`. El Environment impone
+ * required reviewers y branch policy. No corre migrations (eso es de
+ * `skorify-data-deploy`). Modelo CDK igual al de `skorify-frontend-infra`:
+ * asume roles bootstrap para lookups/assets/changeset; el cfn-exec-role
+ * del bootstrap ejecuta CloudFormation con sus propios permisos.
+ */
+export function skorifyDataInfraStatements(accountId: string): iam.PolicyStatement[] {
+  return [
+    new iam.PolicyStatement({
+      sid: 'AssumeCdkBootstrapRoles',
+      actions: ['sts:AssumeRole'],
+      resources: [`arn:aws:iam::${accountId}:role/cdk-hnb659fds-*-${accountId}-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CloudFormationDataInfraStacks',
+      actions: [
+        'cloudformation:CreateStack',
+        'cloudformation:UpdateStack',
+        'cloudformation:DeleteStack',
+        'cloudformation:DescribeStacks',
+        'cloudformation:DescribeStackEvents',
+        'cloudformation:DescribeStackResources',
+        'cloudformation:GetTemplate',
+        'cloudformation:CreateChangeSet',
+        'cloudformation:ExecuteChangeSet',
+        'cloudformation:DescribeChangeSet',
+        'cloudformation:DeleteChangeSet',
+      ],
+      resources: [
+        `arn:aws:cloudformation:*:${accountId}:stack/skorify-data/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/skorify-data-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/CDKToolkit/*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CdkAssetsDataInfra',
+      // Bucket de staging CDK para el código de las Lambdas.
+      actions: [
+        's3:CreateBucket',
+        's3:PutObject',
+        's3:GetObject',
+        's3:ListBucket',
+        's3:GetBucketLocation',
+        's3:PutBucketVersioning',
+        's3:GetBucketVersioning',
+        's3:PutEncryptionConfiguration',
+      ],
+      resources: [
+        `arn:aws:s3:::cdk-hnb659fds-assets-${accountId}-*`,
+        `arn:aws:s3:::cdk-hnb659fds-assets-${accountId}-*/*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'IamDataInfraRoles',
+      // Roles de ejecución de Lambda y Step Functions del dominio data.
+      actions: [
+        'iam:CreateRole',
+        'iam:DeleteRole',
+        'iam:GetRole',
+        'iam:PassRole',
+        'iam:AttachRolePolicy',
+        'iam:DetachRolePolicy',
+        'iam:PutRolePolicy',
+        'iam:DeleteRolePolicy',
+        'iam:GetRolePolicy',
+        'iam:TagRole',
+      ],
+      resources: [`arn:aws:iam::${accountId}:role/skorify-data-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SsmDataInfraParameters',
+      actions: [
+        'ssm:GetParameter',
+        'ssm:GetParameters',
+        'ssm:PutParameter',
+        'ssm:DeleteParameter',
+        'ssm:AddTagsToResource',
+      ],
+      resources: [`arn:aws:ssm:*:${accountId}:parameter/skorify/data/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SsmBootstrapRead',
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:*:${accountId}:parameter/cdk-bootstrap/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'Ec2DataInfraDescribe',
+      // Lectura de la VPC existente para que CDK resuelva subnets y SGs.
+      // ec2:Describe* no soporta resource-level permissions.
+      actions: [
+        'ec2:DescribeVpcs',
+        'ec2:DescribeSubnets',
+        'ec2:DescribeSecurityGroups',
+        'ec2:DescribeAvailabilityZones',
+        'ec2:DescribeNetworkInterfaces',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'Ec2DataInfraNetworkInterfaces',
+      // Lambda en VPC crea y elimina ENIs en las subnets de la VPC existente.
+      actions: [
+        'ec2:CreateNetworkInterface',
+        'ec2:DeleteNetworkInterface',
+        'ec2:AuthorizeSecurityGroupIngress',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'RdsDataInfraManage',
+      // skorifyDatabase: instancia RDS, subnet group y snapshot.
+      // StartDBInstance/StopDBInstance los usa RdsScheduler Lambda (solo non-prod).
+      actions: [
+        'rds:CreateDBInstance',
+        'rds:DescribeDBInstances',
+        'rds:ModifyDBInstance',
+        'rds:CreateDBSubnetGroup',
+        'rds:DeleteDBSubnetGroup',
+        'rds:DescribeDBSubnetGroups',
+        'rds:AddTagsToResource',
+        'rds:ListTagsForResource',
+        'rds:CreateDBSnapshot',
+        'rds:StartDBInstance',
+        'rds:StopDBInstance',
+      ],
+      resources: [
+        `arn:aws:rds:*:${accountId}:db:skorify-data-*`,
+        `arn:aws:rds:*:${accountId}:subgrp:skorify-data-*`,
+        `arn:aws:rds:*:${accountId}:snapshot:skorify-data-*`,
+        `arn:aws:rds:*:${accountId}:snapshot:rds:skorify-data-*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SecretsManagerDataInfra',
+      // Credenciales RDS auto-generadas por CDK.
+      actions: [
+        'secretsmanager:CreateSecret',
+        'secretsmanager:DeleteSecret',
+        'secretsmanager:DescribeSecret',
+        'secretsmanager:GetSecretValue',
+        'secretsmanager:PutSecretValue',
+        'secretsmanager:TagResource',
+        'secretsmanager:PutResourcePolicy',
+      ],
+      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/data/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'LambdaDataInfra',
+      // skorifyDatabase: RdsScheduler (non-prod). skorifyEventBridge: 9 Lambdas.
+      actions: [
+        'lambda:CreateFunction',
+        'lambda:DeleteFunction',
+        'lambda:UpdateFunctionCode',
+        'lambda:UpdateFunctionConfiguration',
+        'lambda:GetFunction',
+        'lambda:AddPermission',
+        'lambda:RemovePermission',
+        'lambda:GetPolicy',
+        'lambda:CreateEventSourceMapping',
+        'lambda:DeleteEventSourceMapping',
+        'lambda:GetEventSourceMapping',
+        'lambda:UpdateEventSourceMapping',
+        'lambda:TagResource',
+      ],
+      resources: [
+        `arn:aws:lambda:*:${accountId}:function:skorify-data-*`,
+        `arn:aws:lambda:*:${accountId}:event-source-mapping:*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'EventBridgeDataInfra',
+      // skorifyDatabase: 2 reglas non-prod. skorifyEventBridge: 1 bus custom + 4 reglas.
+      actions: [
+        'events:CreateEventBus',
+        'events:DeleteEventBus',
+        'events:DescribeEventBus',
+        'events:PutRule',
+        'events:DeleteRule',
+        'events:DescribeRule',
+        'events:PutTargets',
+        'events:RemoveTargets',
+        'events:TagResource',
+      ],
+      resources: [
+        `arn:aws:events:*:${accountId}:event-bus/skorify-data-*`,
+        `arn:aws:events:*:${accountId}:rule/skorify-data-*`,
+        `arn:aws:events:*:${accountId}:rule/skorify-data-*/skorify-data-*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SqsDataInfra',
+      // DLQ + FinishMatchQueue + NotifyUserQueue en skorifyEventBridge.
+      actions: [
+        'sqs:CreateQueue',
+        'sqs:DeleteQueue',
+        'sqs:GetQueueAttributes',
+        'sqs:SetQueueAttributes',
+        'sqs:GetQueueUrl',
+        'sqs:TagQueue',
+        'sqs:AddPermission',
+        'sqs:RemovePermission',
+      ],
+      resources: [`arn:aws:sqs:*:${accountId}:skorify-data-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'StepFunctionsDataInfra',
+      // RankingStateMachine + CreateMatchesStateMachine en skorifyEventBridge.
+      actions: [
+        'states:CreateStateMachine',
+        'states:DeleteStateMachine',
+        'states:DescribeStateMachine',
+        'states:UpdateStateMachine',
+        'states:TagResource',
+      ],
+      resources: [`arn:aws:states:*:${accountId}:stateMachine:skorify-data-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'DynamoDbDataInfra',
+      // MatchMappingTable + TeamMappingTable en skorifyEventBridge.
+      actions: [
+        'dynamodb:CreateTable',
+        'dynamodb:DeleteTable',
+        'dynamodb:DescribeTable',
+        'dynamodb:UpdateTable',
+        'dynamodb:TagResource',
+      ],
+      resources: [`arn:aws:dynamodb:*:${accountId}:table/skorify-data-*`],
+    }),
+  ];
+}
+
+// ============================================================
 // Infra Skorify (CDK general del proyecto)
 // ============================================================
 
