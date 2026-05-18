@@ -38,6 +38,7 @@ temp/
 *.js
 !jest.config.js
 !*rc.js
+!docs/presentacion/js/*.js
 *.d.ts
 *.js.map
 

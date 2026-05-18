@@ -1,0 +1,959 @@
+/* =============================================================================
+ * Tema Skorify para reveal.js — coherente con Pagina_Web/css/styles.css
+ * Líder DevOps: @edisoncast — Avances CI/CD · Infraestructura · SRE
+ * ============================================================================= */
+
+/* Subir base de reveal de ~42px a 48px — todo crece proporcionalmente */
+.reveal {
+  --r-main-font-size: 48px;
+}
+
+:root {
+  --primary-color: #8b5cf6;
+  --primary-dark: #7c3aed;
+  --primary-light: #a78bfa;
+  --primary-glow: #c4b5fd;
+  --secondary-color: #1b1f30;
+  --secondary-light: #252a3d;
+  --accent-color: #a855f7;
+  --accent-pink: #e879f9;
+  --white: #ffffff;
+  --gray-light: #f5f3ff;
+  --gray: #e4dff7;
+  --gray-dark: #0f1117;
+  --shadow: 0 4px 16px rgba(124, 58, 237, 0.10);
+  --shadow-hover: 0 8px 32px rgba(124, 58, 237, 0.22);
+  --shadow-purple: 0 4px 20px rgba(139, 92, 246, 0.30);
+  --border-radius: 14px;
+  --gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  --gradient-dark: linear-gradient(135deg, #1b1f30 0%, #252a3d 100%);
+  --gradient-hero: linear-gradient(135deg, #1b1f30 0%, #2a1d4a 50%, #4c1d95 100%);
+}
+
+/* ---------------------------------------------------------------------------
+ * Reset reveal.js base
+ * ------------------------------------------------------------------------- */
+
+.reveal,
+.reveal .slides,
+.reveal .slides > section {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.reveal {
+  color: var(--white);
+}
+
+html.reveal-full-page,
+.reveal-viewport {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(124,58,237,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(168,85,247,0.14) 0%, transparent 55%),
+    var(--secondary-color) !important;
+}
+
+.reveal .slides > section,
+.reveal .slides > section > section {
+  text-align: left;
+  padding: 1.2em 1.6em;
+}
+
+/* Decoración sutil tras los headings de cada slide */
+.reveal .slides > section > h2 {
+  position: relative;
+  padding-bottom: 0.35em;
+  margin-bottom: 0.55em;
+}
+
+.reveal .slides > section > h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 3em;
+  height: 4px;
+  background: var(--gradient);
+  border-radius: 999px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Tipografía
+ * ------------------------------------------------------------------------- */
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--white);
+  text-transform: none;
+  margin-bottom: 0.4em;
+}
+
+.reveal h1 { font-size: 2.4em; }
+.reveal h2 { font-size: 1.7em; }
+.reveal h3 { font-size: 1.25em; color: var(--primary-light); }
+.reveal h4 { font-size: 1.05em; color: var(--primary-glow); font-weight: 600; }
+
+.reveal p,
+.reveal li {
+  font-weight: 400;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.92);
+}
+
+.reveal strong { color: var(--primary-glow); font-weight: 700; }
+.reveal em { color: var(--accent-pink); font-style: italic; }
+
+.reveal a {
+  color: var(--primary-light);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--primary-light);
+}
+.reveal a:hover { color: var(--accent-pink); border-bottom-color: var(--accent-pink); }
+
+/* Texto pequeño / pie de página */
+.reveal .footnote {
+  font-size: 0.78em;
+  color: var(--primary-glow);
+  opacity: 0.9;
+  margin-top: 1.4em;
+  line-height: 1.45;
+}
+
+/* Statement de cita destacada — moraleja o frase clave del slide */
+.reveal .callout-line {
+  margin-top: 1.2em;
+  font-size: 1.25em;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--white);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  background: linear-gradient(90deg, rgba(232,121,249,0.15) 0%, rgba(139,92,246,0.05) 100%);
+  border-left: 4px solid var(--accent-pink);
+  padding: 0.6em 1em;
+  border-radius: 0 12px 12px 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Slide hero / portada y separadores
+ * ------------------------------------------------------------------------- */
+
+.reveal section.hero {
+  background: var(--gradient-hero);
+  text-align: center;
+  padding: 1em;
+}
+
+.reveal section.hero h1 {
+  font-size: 3.4em;
+  background: linear-gradient(135deg, #ffffff 0%, #e879f9 50%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.3em;
+  letter-spacing: -0.025em;
+  filter: drop-shadow(0 4px 12px rgba(168,85,247,0.25));
+}
+
+.reveal section.hero .lead {
+  font-size: 1.4em;
+  color: var(--primary-glow);
+  font-weight: 500;
+  margin-bottom: 1.4em;
+}
+
+.reveal section.hero .meta {
+  font-size: 0.78em;
+  color: rgba(255,255,255,0.78);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reveal section.hero .logo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin: 0 auto 1em;
+  box-shadow: var(--shadow-purple);
+  border: 3px solid var(--primary-light);
+}
+
+.reveal section.divider {
+  background: var(--gradient);
+  text-align: center;
+}
+
+.reveal section.divider h1,
+.reveal section.divider h2 {
+  font-size: 2.6em;
+  color: var(--white);
+}
+
+/* ---------------------------------------------------------------------------
+ * Cards / grids
+ * ------------------------------------------------------------------------- */
+
+.reveal .card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.reveal .card {
+  background: linear-gradient(160deg, #252a3d 0%, #1b1f30 100%);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-radius: 16px;
+  padding: 1.1em 1.2em;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient);
+  opacity: 0.5;
+}
+
+.reveal .card.accent {
+  border-color: rgba(168, 85, 247, 0.55);
+  box-shadow: 0 10px 32px rgba(124, 58, 237, 0.32);
+}
+
+.reveal .card.accent::before { opacity: 1; }
+
+.reveal .card .num {
+  font-size: 2.4em;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+  line-height: 1;
+  margin-bottom: 0.15em;
+}
+
+.reveal .card .label {
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary-glow);
+  font-weight: 700;
+}
+
+.reveal .card .desc {
+  font-size: 0.78em;
+  color: rgba(255,255,255,0.88);
+  margin-top: 0.4em;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+ * Badges
+ * ------------------------------------------------------------------------- */
+
+.reveal .badge {
+  display: inline-block;
+  padding: 0.25em 0.7em;
+  border-radius: 999px;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-right: 0.4em;
+}
+
+.reveal .badge.aceptado { background: rgba(34,197,94,0.18); color: #4ade80; }
+.reveal .badge.propuesto { background: rgba(234,179,8,0.18); color: #facc15; }
+.reveal .badge.fase2 { background: rgba(139,92,246,0.18); color: var(--primary-light); }
+.reveal .badge.bloqueado { background: rgba(239,68,68,0.18); color: #fca5a5; }
+
+/* ---------------------------------------------------------------------------
+ * Pregunta grande / quote slide
+ * ------------------------------------------------------------------------- */
+
+.reveal .big-question {
+  font-size: 1.8em;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--white);
+  max-width: 16em;
+  margin: 0 auto;
+}
+
+.reveal .big-question .accent {
+  color: var(--accent-pink);
+}
+
+.reveal .quote-attr {
+  text-align: center;
+  font-size: 0.95em;
+  margin-top: 1.8em;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+ * Tabla de ADRs
+ * ------------------------------------------------------------------------- */
+
+.reveal table {
+  width: 100%;
+  margin-top: 0.6em;
+  border-collapse: collapse;
+  font-size: 0.8em;
+}
+
+.reveal table th {
+  text-align: left;
+  padding: 0.7em 0.9em;
+  background: var(--gradient);
+  color: var(--white);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  border: none;
+}
+
+.reveal table th:first-child { border-radius: 12px 0 0 0; }
+.reveal table th:last-child { border-radius: 0 12px 0 0; }
+
+.reveal table td {
+  padding: 0.65em 0.9em;
+  border-bottom: 1px solid rgba(139,92,246,0.18);
+  color: rgba(255,255,255,0.92);
+}
+
+.reveal table tr:nth-child(even) td { background: rgba(139,92,246,0.06); }
+.reveal table tr:hover td { background: rgba(139,92,246,0.12); }
+
+/* ---------------------------------------------------------------------------
+ * Code blocks (highlight.js + reveal)
+ * ------------------------------------------------------------------------- */
+
+.reveal pre {
+  box-shadow: var(--shadow-hover);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(139,92,246,0.25);
+  width: 100%;
+  margin: 0.5em 0;
+  font-size: 0.6em;
+  line-height: 1.5;
+}
+
+.reveal pre code {
+  padding: 1em 1.2em;
+  border-radius: var(--border-radius);
+  max-height: 480px;
+}
+
+.reveal code {
+  font-family: 'Fira Code', 'Cascadia Code', Menlo, Consolas, monospace;
+  background: rgba(139,92,246,0.12);
+  color: var(--primary-glow);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.reveal pre code { background: transparent; color: inherit; padding: 1em 1.2em; }
+
+.reveal .code-caption {
+  font-size: 0.62em;
+  color: var(--primary-glow);
+  opacity: 0.9;
+  margin-top: 0.4em;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Lista de lecciones
+ * ------------------------------------------------------------------------- */
+
+.reveal .lessons {
+  list-style: none;
+  padding: 0;
+  margin-top: 1em;
+}
+
+.reveal .lessons li {
+  padding: 0.8em 1.2em 0.8em 1.5em;
+  margin-bottom: 0.6em;
+  border-left: 4px solid var(--primary-color);
+  background: linear-gradient(90deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.04) 100%);
+  border-radius: 0 12px 12px 0;
+  font-size: 0.95em;
+  font-weight: 500;
+  font-style: italic;
+  position: relative;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+}
+
+.reveal .lessons li::before {
+  content: '\201C';
+  position: absolute;
+  left: 0.4em;
+  top: -0.2em;
+  font-size: 1.6em;
+  color: var(--primary-light);
+  opacity: 0.4;
+  font-style: normal;
+  font-family: Georgia, serif;
+}
+
+/* ---------------------------------------------------------------------------
+ * Línea de tiempo (roadmap)
+ * ------------------------------------------------------------------------- */
+
+.reveal .timeline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.reveal .timeline .phase {
+  background: linear-gradient(160deg, #252a3d 0%, #1b1f30 100%);
+  border-radius: 16px;
+  padding: 1.1em 1em 1em;
+  border-top: 4px solid var(--primary-color);
+  position: relative;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.32);
+  overflow: hidden;
+}
+
+.reveal .timeline .phase::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -20%;
+  width: 50%;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(139,92,246,0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.reveal .timeline .phase.active { border-top-color: #4ade80; }
+.reveal .timeline .phase.next { border-top-color: var(--accent-pink); }
+
+.reveal .timeline .phase h3 {
+  font-size: 0.95em;
+  margin-bottom: 0.3em;
+  color: var(--white);
+}
+
+.reveal .timeline .phase .when {
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary-glow);
+  font-weight: 700;
+  margin-bottom: 0.6em;
+}
+
+.reveal .timeline .phase ul {
+  list-style: none;
+  padding: 0;
+  font-size: 0.82em;
+}
+
+.reveal .timeline .phase li {
+  padding-left: 1em;
+  position: relative;
+  margin-bottom: 0.4em;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.4;
+}
+
+.reveal .timeline .phase li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--primary-light);
+}
+
+/* ---------------------------------------------------------------------------
+ * Diagrama HTML/CSS — flow pipeline (slide CI/CD)
+ * ------------------------------------------------------------------------- */
+
+.reveal .flow-pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.3em;
+  margin: 1em 0 0.6em;
+  position: relative;
+}
+
+.reveal .flow-pipeline::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 4%;
+  right: 4%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.55), rgba(232,121,249,0.55), rgba(139,92,246,0.55), transparent);
+  z-index: 0;
+}
+
+.reveal .flow-step {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(160deg, #2a1d4a 0%, #1b1f30 100%);
+  border: 1px solid rgba(139,92,246,0.45);
+  border-radius: 16px;
+  padding: 1em 0.9em 0.9em;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow-hover);
+}
+
+.reveal .flow-step--final {
+  background: linear-gradient(160deg, #7c3aed 0%, #a855f7 60%, #e879f9 100%);
+  border-color: #fff;
+  box-shadow: 0 12px 40px rgba(232,121,249,0.35);
+}
+
+.reveal .flow-step .flow-num {
+  position: absolute;
+  top: -0.85em;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 999px;
+  background: var(--primary-dark);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85em;
+  border: 3px solid var(--secondary-color);
+  box-shadow: 0 4px 12px rgba(124,58,237,0.5);
+}
+
+.reveal .flow-step--final .flow-num {
+  background: #fff;
+  color: var(--primary-dark);
+  border-color: var(--secondary-color);
+}
+
+.reveal .flow-step .flow-icon {
+  font-size: 1.7em;
+  color: var(--primary-light);
+  margin: 0.3em 0 0.5em;
+  filter: drop-shadow(0 2px 6px rgba(139,92,246,0.4));
+}
+
+.reveal .flow-step--final .flow-icon {
+  color: #fff;
+  filter: drop-shadow(0 2px 8px rgba(255,255,255,0.4));
+}
+
+.reveal .flow-step .flow-title {
+  font-size: 0.7em;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.3em;
+  letter-spacing: 0.02em;
+}
+
+.reveal .flow-step p {
+  font-size: 0.55em;
+  line-height: 1.45;
+  margin: 0;
+  color: rgba(255,255,255,0.85);
+}
+
+.reveal .flow-step--final p {
+  color: rgba(255,255,255,0.95);
+}
+
+/* ---------------------------------------------------------------------------
+ * Diagrama HTML/CSS — arquitectura AWS (slide Infra)
+ * ------------------------------------------------------------------------- */
+
+.reveal .arch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2em;
+  margin-top: 0.8em;
+}
+
+.reveal .arch-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45em;
+  background: rgba(139,92,246,0.05);
+  border: 1px solid rgba(139,92,246,0.18);
+  border-radius: 16px;
+  padding: 0.9em 0.8em 1em;
+}
+
+.reveal .arch-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.6em 0.5em;
+  margin-bottom: 0.2em;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+.reveal .arch-col-header i { font-size: 1.3em; }
+
+.reveal .arch-col-header--fe { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); }
+.reveal .arch-col-header--be { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+.reveal .arch-col-header--data { background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); }
+
+.reveal .arch-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  background: linear-gradient(160deg, #252a3d 0%, #1b1f30 100%);
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 10px;
+  padding: 0.5em 0.7em;
+  font-size: 0.62em;
+  font-weight: 600;
+  color: rgba(255,255,255,0.95);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+
+.reveal .arch-box::before {
+  content: '';
+  position: absolute;
+  top: -0.45em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 0.45em;
+  background: rgba(139,92,246,0.45);
+}
+
+.reveal .arch-box:first-of-type::before { display: none; }
+
+.reveal .arch-box i {
+  font-size: 1.2em;
+  color: var(--primary-light);
+  width: 1.4em;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.reveal .arch-box--aws {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border-color: var(--primary-glow);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(139,92,246,0.35);
+}
+
+.reveal .arch-box--aws i { color: #fff; }
+
+.reveal .arch-box span { flex: 1; text-align: left; }
+
+.reveal .arch-box small {
+  font-size: 0.85em;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-left: 0.3em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Controls / progress
+ * ------------------------------------------------------------------------- */
+
+.reveal .progress {
+  color: var(--primary-color);
+  height: 4px;
+}
+
+.reveal .controls {
+  color: var(--primary-light);
+}
+
+.reveal .slide-number {
+  background: rgba(139,92,246,0.18);
+  color: var(--primary-glow);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Two-column helper
+ * ------------------------------------------------------------------------- */
+
+.reveal .cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  align-items: start;
+}
+
+.reveal .cols-2 h3 { margin-top: 0; }
+
+/* ---------------------------------------------------------------------------
+ * Branch map — mapeo rama → ambiente (slide ambientes)
+ * ------------------------------------------------------------------------- */
+
+.reveal .branch-map {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  margin: 0.9em 0;
+  padding: 1em 1.2em;
+  background: linear-gradient(160deg, rgba(139,92,246,0.10) 0%, rgba(139,92,246,0.03) 100%);
+  border: 1px solid rgba(139,92,246,0.25);
+  border-radius: 14px;
+}
+
+.reveal .branch-map-row {
+  display: grid;
+  grid-template-columns: 11em 2em 5em 1fr;
+  align-items: center;
+  gap: 0.8em;
+  font-size: 0.78em;
+}
+
+.reveal .branch-map-row .branch-name {
+  background: rgba(139,92,246,0.18);
+  color: var(--primary-glow);
+  padding: 0.3em 0.7em;
+  border-radius: 6px;
+  font-family: 'Fira Code', Menlo, Consolas, monospace;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid rgba(139,92,246,0.3);
+}
+
+.reveal .branch-map-row .branch-arrow {
+  color: var(--primary-light);
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.reveal .branch-map-row .branch-env {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 0.35em 0.7em;
+  border-radius: 999px;
+  color: #fff;
+  text-align: center;
+}
+
+.reveal .branch-map-row .branch-env--dev { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+.reveal .branch-map-row .branch-env--stg { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.reveal .branch-map-row .branch-env--prod { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+.reveal .branch-map-row .branch-trigger {
+  font-size: 0.92em;
+  color: rgba(255,255,255,0.85);
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------------------
+ * Env grid — tres ambientes (slide DEV/STG/PROD)
+ * ------------------------------------------------------------------------- */
+
+.reveal .env-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2em;
+  margin-top: 0.8em;
+}
+
+.reveal .env-card {
+  position: relative;
+  background: linear-gradient(160deg, #252a3d 0%, #1b1f30 100%);
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 16px;
+  padding: 1.5em 1.1em 1.1em;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+  overflow: hidden;
+}
+
+.reveal .env-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+
+.reveal .env-card--dev::before { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+.reveal .env-card--stg::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.reveal .env-card--prod::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+
+.reveal .env-card .env-badge {
+  display: inline-block;
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding: 0.25em 0.85em;
+  border-radius: 999px;
+  margin-bottom: 0.5em;
+  color: #fff;
+}
+
+.reveal .env-card--dev .env-badge { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+.reveal .env-card--stg .env-badge { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.reveal .env-card--prod .env-badge { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+.reveal .env-card .env-title {
+  font-size: 0.95em;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.7em;
+  letter-spacing: -0.01em;
+}
+
+.reveal .env-card .env-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.reveal .env-card .env-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  font-size: 0.72em;
+  line-height: 1.5;
+  padding: 0.35em 0;
+  color: rgba(255,255,255,0.92);
+  border-bottom: 1px solid rgba(139,92,246,0.12);
+}
+
+.reveal .env-card .env-list li:last-child { border-bottom: none; }
+
+.reveal .env-card .env-list i {
+  width: 1.3em;
+  text-align: center;
+  color: var(--primary-light);
+  font-size: 0.95em;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Zero-board — statement de impacto (slide del reto)
+ * ------------------------------------------------------------------------- */
+
+.reveal .zero-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5em;
+  align-items: end;
+  margin-top: 1.4em;
+  padding: 1em 0;
+  border-top: 2px solid rgba(232,121,249,0.35);
+  border-bottom: 2px solid rgba(232,121,249,0.35);
+  background: linear-gradient(180deg, rgba(232,121,249,0.05) 0%, transparent 100%);
+}
+
+.reveal .zero-board .zero-item {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+}
+
+.reveal .zero-board .zero-num {
+  font-size: 4.4em;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #e879f9 60%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.04em;
+  filter: drop-shadow(0 6px 18px rgba(232,121,249,0.35));
+}
+
+.reveal .zero-board .zero-label {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+/* ---------------------------------------------------------------------------
+ * Animaciones de fragments — más suaves que las default
+ * ------------------------------------------------------------------------- */
+
+.reveal .fragment.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.reveal .fragment.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal .fragment.fade-right {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.reveal .fragment.fade-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal .fragment.fade-left {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.reveal .fragment.fade-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ---------------------------------------------------------------------------
+ * Highlight Tokyo Night override (asegura legibilidad)
+ * ------------------------------------------------------------------------- */
+
+.reveal .hljs {
+  background: #16161e !important;
+  color: #c0caf5 !important;
+}

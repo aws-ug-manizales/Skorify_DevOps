@@ -2,13 +2,18 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { loadConfigFromSSM } from './config/ssm-reader';
+import { getVpcModulePropsFromEnv } from './config/networking-env';
 import { S3Module } from './modules/s3/main';
+import { VpcModule } from './modules/vpc/main';
+import { maybeCreateSkorifyOrganizationStack } from './modules/organizations/stack';
+import { maybeCreateSkorifyBootstrapStack } from './modules/iam/oidc-and-roles/stack';
 
 const app = new cdk.App();
 const environmentName = process.env.SKORIFY_ENVIRONMENT ?? 'dev';
+const enableNetworking = (process.env.SKORIFY_ENABLE_NETWORKING ?? 'true').toLowerCase() === 'true';
 
 // ==========================================
-// Skorify CDK App — Configuración desde Parameter Store
+// Skorify CDK App: configuración desde Parameter Store
 // ==========================================
 // Este código lee la configuración desde Parameter Store de la cuenta
 // donde se ejecuta. Cada cuenta (dev, staging, prod) tiene sus propios
@@ -57,3 +62,41 @@ if (config.s3Buckets.length > 0) {
     buckets: config.s3Buckets,
   });
 }
+/**
+ * Módulo de VPC: parámetros de red para la VPC privada.
+ * 
+ * Inicializa la red privada base (VPC, subnets y rutas) para que otros módulos desplieguen recursos internos.
+ * 
+ */
+if (enableNetworking) {
+  new VpcModule(envStack, 'Network', getVpcModulePropsFromEnv());
+}
+
+// ==========================================
+// Stack de Organization (solo aparece y se despliega desde master)
+// ==========================================
+// Lectura de env y delegación al helper. El helper aplica:
+//   - Materialización condicional: solo si la cuenta activa es la master.
+//   - Filtrado por fase: si SKORIFY_ORG_IMPORT_PHASE está activo, solo
+//     las cuentas marcadas `existing: true`.
+// Detalle del flujo en docs/runbooks/oidc-bootstrap.md y en
+// lib/modules/organizations/stack.ts.
+// ==========================================
+maybeCreateSkorifyOrganizationStack(app, {
+  currentAccount: process.env.CDK_DEFAULT_ACCOUNT,
+  importPhase: process.env.SKORIFY_ORG_IMPORT_PHASE === 'true',
+});
+
+// ==========================================
+// Stack de Bootstrap OIDC (se materializa según la cuenta activa)
+// ==========================================
+// Master: roles awsug-pagina-web-deploy y awsug-pagina-web-infra.
+// DEV/STG/PROD: 6 roles Skorify (backend, frontend, frontend-infra, data,
+// infra, ops-readonly).
+// Cuentas no modeladas: undefined, el stack no aparece en cdk list.
+// Detalle en docs/runbooks/oidc-bootstrap.md y en
+// lib/modules/iam/oidc-and-roles/stack.ts.
+// ==========================================
+maybeCreateSkorifyBootstrapStack(app, {
+  currentAccount: process.env.CDK_DEFAULT_ACCOUNT,
+});

@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Skorify DevOps · De localhost a producción</title>
+
+  <link rel="icon" type="image/jpeg" href="img/logo.jpg" />
+
+  <!-- Tipografías -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Font Awesome (consistente con el sitio Skorify) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+
+  <!-- reveal.js v5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/reveal.css" />
+
+  <!-- highlight.js theme oscuro -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/plugin/highlight/monokai.css"
+  />
+
+  <!-- Tema Skorify -->
+  <link rel="stylesheet" href="css/skorify-theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- =====================================================
+           SLIDE 1 — Portada
+      ====================================================== -->
+      <section class="hero" data-background-color="#1b1f30">
+        <img class="logo" src="img/logo.jpg" alt="Skorify · AWS UG Manizales" />
+        <h1>De localhost a producción</h1>
+        <p class="lead">El camino DevOps de Skorify</p>
+        <p class="meta">CI/CD · Infraestructura · SRE</p>
+        <p class="meta" style="margin-top: 1.5em;">
+          @edisoncast · Líder DevOps &nbsp;·&nbsp; 29 abril 2026
+        </p>
+        <aside class="notes">
+          Bienvenida (30 s). Soy el líder DevOps de Skorify. En los próximos 20 minutos voy a contar
+          de dónde venimos, qué hemos construido en CI/CD, infraestructura y SRE, qué viene, y qué
+          aprendí coordinando cuatro equipos. La presentación es para todo el equipo: frontend,
+          backend, data y devops. Mateo (@Mateo454) y Michael (@lmichaelrc) son los sub-líderes que
+          pueden guiar al equipo en lo que cubra hoy — sobre todo en la parte de infraestructura y
+          devcontainer.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 2 — El reto que recibimos
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>El reto que recibimos</h2>
+        <p style="font-size: 0.9em; color: var(--primary-glow);">
+          Tres equipos · tres stacks distintos · ningún contrato común.
+        </p>
+        <div class="card-grid">
+          <div class="card fragment fade-right">
+            <span class="label">Data</span>
+            <p class="desc" style="margin-top: 0.6em;">
+              TypeScript<br />
+              TypeORM + Knex<br />
+              PostgreSQL
+            </p>
+          </div>
+          <div class="card fragment fade-up">
+            <span class="label">Backend</span>
+            <p class="desc" style="margin-top: 0.6em;">
+              TypeScript · framework Iraca (Scifamek)<br />
+              Monorepo: server / domain / builders / shared<br />
+              pnpm
+            </p>
+          </div>
+          <div class="card fragment fade-left">
+            <span class="label">Frontend</span>
+            <p class="desc" style="margin-top: 0.6em;">
+              React 19 + Next.js<br />
+              Material UI · Zustand · Sass<br />
+              TypeScript
+            </p>
+          </div>
+        </div>
+        <div class="zero-board fragment fade-up">
+          <div class="zero-item">
+            <span class="zero-num">0</span>
+            <span class="zero-label">infraestructura<br />en AWS</span>
+          </div>
+          <div class="zero-item">
+            <span class="zero-num">0</span>
+            <span class="zero-label">CI/CD<br />compartido</span>
+          </div>
+          <div class="zero-item">
+            <span class="zero-num">0</span>
+            <span class="zero-label">convención<br />común</span>
+          </div>
+        </div>
+        <aside class="notes">
+          (1 min) El reto era construir el puente entre tres stacks que ya estaban escogidos y un
+          destino — AWS — al que todavía no llegábamos. Data ya tenía PostgreSQL con TypeORM y
+          Knex, backend corría sobre el framework Iraca como monorepo, frontend tenía React con
+          Next.js y Material UI. Tres formas distintas de empacar, probar y desplegar. Cuando yo
+          empecé no había cuenta AWS, ni pipeline compartido, ni siquiera convención de nombres
+          de rama. Mi trabajo era darles un contrato común antes de que cada uno fuera por su
+          lado.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 3 — La pregunta
+      ====================================================== -->
+      <section class="divider" data-background-color="#7c3aed">
+        <div class="big-question">
+          ¿Construimos cloud sin saber qué construir,<br />
+          o <span class="accent">decidimos primero</span>?
+        </div>
+        <p class="quote-attr">La pregunta que abrió la fase 0</p>
+        <aside class="notes">
+          (45 s) Pausa. Esta fue la pregunta real. La tentación de un equipo joven es correr a
+          escribir CDK. Decidimos pausar. No porque no supiéramos hacerlo — porque queríamos
+          que cuatro equipos lo hicieran igual.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 4 — La decisión de liderazgo
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>La decisión</h2>
+        <p style="font-size: 1.6em; font-weight: 700; line-height: 1.3; margin-top: 0.8em;">
+          Antes del primer <code>cdk deploy</code>,<br />
+          escribimos <span style="color: var(--accent-pink);">28 ADRs</span>.
+        </p>
+        <p style="margin-top: 1.2em; font-size: 0.95em; line-height: 1.5;">
+          Architecture Decision Records en formato <strong>Nygard</strong>: contexto · decisión ·
+          consecuencias. Aprobados por @edisoncast, @Mateo454, @lmichaelrc, @steevensmelo.
+        </p>
+        <p class="callout-line">
+Decidir antes de construir.
+        </p>
+        <p style="font-size: 0.85em; color: var(--primary-glow); margin-top: 0.3em;">
+          Cada decisión técnica vive en <code>docs/adr/</code> · con autor, fecha y firmas.
+        </p>
+        <aside class="notes">
+          (1 min 15 s) Esta es la decisión central. 28 ADRs significan 28 conversaciones cerradas
+          por escrito — no en Slack, no en una reunión que nadie recuerda. Formato Nygard: estándar
+          de la industria, lo usan Spotify, ThoughtWorks, AWS. Cada ADR tiene autor, fecha y
+          aprobadores explícitos. Eso es contrato social.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 5 — Estructura del equipo "Mediocampistas"
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>La primera decisión: cómo organizarnos</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow); margin-bottom: 0.4em;">
+          Equipo DevOps <strong>"Mediocampistas"</strong> · ADR-0003 (Aceptado).
+          Coordinación general:
+          <strong>Edison Castro</strong> <code>@edisoncast</code>.
+        </p>
+        <p style="font-size: 0.78em; color: rgba(255,255,255,0.85); margin-bottom: 0.6em;">
+          Tres áreas · un líder por área · 15 personas en total · una sola pregunta clara:
+          <em>¿a quién le pregunto sobre…?</em>
+        </p>
+        <div class="card-grid">
+          <div class="card accent fragment fade-up" style="text-align: center;">
+            <i class="fa-solid fa-code-branch" style="font-size: 2.6em; color: var(--primary-light); margin-bottom: 0.3em;"></i>
+            <h3 style="font-size: 1.1em; margin: 0.2em 0;">CI/CD</h3>
+            <p style="font-size: 0.82em; color: var(--primary-glow); font-weight: 600; margin-bottom: 0.4em;">
+              Steevens Castañeda<br />
+              <code>@steevensmelo</code>
+            </p>
+            <p style="font-size: 0.7em; color: var(--accent-pink); font-weight: 600; margin-bottom: 0.5em; letter-spacing: 0.05em;">
+              5 personas
+            </p>
+            <p style="font-size: 0.78em; line-height: 1.55; color: rgba(255,255,255,0.92); text-align: left;">
+              Pipelines y plantillas<br />
+              Pre-commit · SCA<br />
+              Secretos en CI
+            </p>
+          </div>
+          <div class="card accent fragment fade-up" style="text-align: center;">
+            <i class="fa-solid fa-server" style="font-size: 2.6em; color: var(--primary-light); margin-bottom: 0.3em;"></i>
+            <h3 style="font-size: 1.1em; margin: 0.2em 0;">Infra</h3>
+            <p style="font-size: 0.82em; color: var(--primary-glow); font-weight: 600; margin-bottom: 0.4em;">
+              Mateo Marín<br />
+              <code>@Mateo454</code>
+            </p>
+            <p style="font-size: 0.7em; color: var(--accent-pink); font-weight: 600; margin-bottom: 0.5em; letter-spacing: 0.05em;">
+              6 personas
+            </p>
+            <p style="font-size: 0.78em; line-height: 1.55; color: rgba(255,255,255,0.92); text-align: left;">
+              CDK + SAM · AWS<br />
+              IAM · OIDC · KMS<br />
+              Costos en la nube
+            </p>
+          </div>
+          <div class="card accent fragment fade-up" style="text-align: center;">
+            <i class="fa-solid fa-heart-pulse" style="font-size: 2.6em; color: var(--primary-light); margin-bottom: 0.3em;"></i>
+            <h3 style="font-size: 1.1em; margin: 0.2em 0;">SRE</h3>
+            <p style="font-size: 0.82em; color: var(--primary-glow); font-weight: 600; margin-bottom: 0.4em;">
+              Michael Rivera<br />
+              <code>@lmichaelrc</code>
+            </p>
+            <p style="font-size: 0.7em; color: var(--accent-pink); font-weight: 600; margin-bottom: 0.5em; letter-spacing: 0.05em;">
+              4 personas
+            </p>
+            <p style="font-size: 0.78em; line-height: 1.55; color: rgba(255,255,255,0.92); text-align: left;">
+              Datadog · logs y métricas<br />
+              Alertas y CloudTrail<br />
+              Runbooks · postmortems
+            </p>
+          </div>
+        </div>
+        <p class="footnote fragment fade-in" style="text-align: center; margin-top: 1em;">
+          ¿Dudas de pipeline? <strong>Steevens.</strong> &nbsp;·&nbsp;
+          ¿De AWS o devcontainer? <strong>Mateo.</strong> &nbsp;·&nbsp;
+          ¿De logs o alertas? <strong>Michael.</strong>
+        </p>
+        <p class="fragment fade-in" style="text-align: center; margin-top: 0.5em; font-size: 0.72em; color: var(--primary-glow); font-style: italic;">
+          <i class="fa-solid fa-shield-halved" style="margin-right: 0.4em; opacity: 0.85;"></i>
+          ¿Seguridad? No tenemos área dedicada (ADR-0002).
+          Secrets en CI → <strong>Steevens</strong> · IAM, OIDC, KMS → <strong>Mateo</strong> · audit logs → <strong>Michael</strong>.
+        </p>
+        <aside class="notes">
+          (1 min 30 s) La primera decisión que escribimos como ADR fue cómo organizarnos. No el
+          stack, no la nube — el equipo. Tres áreas, tres líderes, alcances explícitos. Esto
+          resuelve el problema más caro de un equipo joven: no saber a quién preguntar. Si tienen
+          una duda de pipeline, hablen con Steevens. Si es de AWS, IAM, CDK o devcontainer, Mateo.
+          Si es de logs, métricas, alertas o postmortems, Michael. Yo me encargo de las decisiones
+          que cruzan áreas y de desbloquear cuando hay tensión entre dos. El nombre del equipo es
+          "Mediocampistas" — el origen lo conoce el grupo. Aclaración importante sobre seguridad:
+          decidimos no tener un área dedicada (ADR-0002), distribuimos sus responsabilidades. Si
+          la pregunta es de secretos en CI o secret scanning, es Steevens. Si es IAM, OIDC, KMS
+          o secretos en runtime, Mateo. Si es audit logs o alertas de seguridad, Michael.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 6 — Tabla de 28 ADRs
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>28 decisiones documentadas</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Área</th>
+              <th>Total</th>
+              <th>Aceptados</th>
+              <th>Propuestos</th>
+              <th>Decisión clave aceptada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Generales</strong></td>
+              <td>3</td>
+              <td><span class="badge aceptado">3</span></td>
+              <td>—</td>
+              <td>Formato ADR · Estructura del equipo · Seguridad</td>
+            </tr>
+            <tr>
+              <td><strong>CI/CD</strong></td>
+              <td>10</td>
+              <td><span class="badge aceptado">1</span></td>
+              <td><span class="badge propuesto">9</span></td>
+              <td>GitHub Actions como plataforma única</td>
+            </tr>
+            <tr>
+              <td><strong>Infraestructura</strong></td>
+              <td>10</td>
+              <td><span class="badge aceptado">1</span></td>
+              <td><span class="badge propuesto">9</span></td>
+              <td>CDK (frontend/infra) + SAM (backend)</td>
+            </tr>
+            <tr>
+              <td><strong>SRE</strong></td>
+              <td>5</td>
+              <td><span class="badge aceptado">1</span></td>
+              <td><span class="badge propuesto">4</span></td>
+              <td>Datadog como plataforma de observabilidad</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="footnote">
+          6 aceptados sostienen la columna vertebral · 22 propuestos están en revisión activa.<br />
+          <em>28 decisiones que dejaron de ser opiniones.</em>
+        </p>
+        <div style="text-align: center; margin-top: 0.8em;">
+          <a href="https://github.com/aws-ug-manizales/Skorify_DevOps/tree/main/docs/adr"
+             style="display: inline-block; padding: 0.55em 1.2em; background: var(--gradient); color: #fff; border-radius: 999px; font-size: 0.78em; font-weight: 600; letter-spacing: 0.04em; text-decoration: none; border: none; box-shadow: var(--shadow-purple);"
+             target="_blank" rel="noopener">
+            <i class="fa-brands fa-github" style="margin-right: 0.5em;"></i>
+            Léelos en GitHub: aws-ug-manizales/Skorify_DevOps/docs/adr
+          </a>
+        </div>
+        <aside class="notes">
+          (1 min) Los 28 ADRs están públicos en el repo, en main. Si los estudiantes quieren
+          entender por qué tomamos cada decisión, ahí está el contexto, las alternativas que
+          consideramos y los trade-offs. Los 6 aceptados son los pilares: GitHub Actions, CDK,
+          SAM, Datadog, formato ADR, estructura del equipo. Todo lo demás es revisable mientras
+          siga propuesto.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 7 — CI: GitHub Actions como columna vertebral
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>CI/CD · GitHub Actions como columna vertebral</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow); margin-bottom: 0.4em;">
+          Cuando un equipo abre un Pull Request, este es el flujo que debería ejecutarse:
+        </p>
+        <div class="flow-pipeline">
+          <div class="flow-step fragment fade-up">
+            <span class="flow-num">1</span>
+            <i class="flow-icon fa-solid fa-code-pull-request"></i>
+            <h4 class="flow-title">Pull Request</h4>
+            <p>Un repo abre un PR contra <code>develop</code></p>
+          </div>
+          <div class="flow-step fragment fade-up">
+            <span class="flow-num">2</span>
+            <i class="flow-icon fa-solid fa-link"></i>
+            <h4 class="flow-title">Llama plantillas</h4>
+            <p>Workflows reusables de <code>Skorify_DevOps</code></p>
+          </div>
+          <div class="flow-step fragment fade-up">
+            <span class="flow-num">3</span>
+            <i class="flow-icon fa-solid fa-flask-vial"></i>
+            <h4 class="flow-title">Ejecuta controles</h4>
+            <p>Lint · tests · SCA · build</p>
+          </div>
+          <div class="flow-step flow-step--final fragment fade-up">
+            <span class="flow-num">4</span>
+            <i class="flow-icon fa-solid fa-shield-halved"></i>
+            <h4 class="flow-title">Calidad uniforme</h4>
+            <p>Mismo estándar en Frontend, Backend y Data</p>
+          </div>
+        </div>
+        <div class="fragment fade-in" style="margin-top: 0.6em; padding: 0.7em 1em; background: rgba(139,92,246,0.12); border-left: 4px solid var(--primary-color); border-radius: 0 var(--border-radius) var(--border-radius) 0;">
+          <p style="font-size: 0.78em; line-height: 1.45; margin: 0 0 0.4em; color: rgba(255,255,255,0.95);">
+            <i class="fa-solid fa-bullhorn" style="color: var(--primary-light); margin-right: 0.4em;"></i>
+            <strong>Mensaje a los tres equipos:</strong> alineen sus pipelines a las plantillas
+            de <code>Skorify_DevOps</code>. Llamen los reusable con <code>workflow_call</code> y
+            los composite con <code>uses: ./actions/...</code>. No reinventen workflows.
+          </p>
+          <p style="font-size: 0.72em; line-height: 1.4; margin: 0; color: var(--primary-glow); font-style: italic;">
+            DevOps se compromete a que para el viernes esté funcional.
+            Si no, llamen a Steevens. (Es chiste. Para el viernes lo tenemos.)
+          </p>
+        </div>
+        <aside class="notes">
+          (1 min 30 s) Lean el diagrama paso a paso: cualquier repo abre un PR (1), el repo llama
+          las plantillas oficiales que viven en Skorify_DevOps (2), esas plantillas ejecutan lint,
+          tests, escaneo de vulnerabilidades y build (3), y al final los tres repos quedan bajo el
+          mismo control de calidad (4). Lo barato no es GitHub Actions, es la disciplina: 11
+          reusable workflows con convención `shared--stage-componente.yml` y 6 composite actions
+          con un solo dueño. El mensaje para frontend, backend y data es directo: no reinventen un
+          linter en cada repo, no escriban su propio escaneo. Llamen al reusable con
+          `workflow_call` y al composite con `uses: ./actions/...`. El frontend ya empezó.
+          Y el chiste con cariño: DevOps se compromete a que el viernes esté funcional, si no
+          llamen a Steevens. Pausa para reírse — y sí, para el viernes lo tenemos.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 8 — CI ya tiene código (Trivy SCA)
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>CI ya tiene código</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow);">
+          Workflow SCA con Trivy · rama <code>develop</code> · reusable.
+        </p>
+<pre><code class="language-yaml">name: "Shared: SCA - Escaneo de vulnerabilidades"
+
+on:
+  workflow_call:
+
+jobs:
+  sca-scan:
+    runs-on: ubuntu-latest
+    container:
+      image: aquasec/trivy:0.70.0
+      options: --entrypoint /bin/sh
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Ejecutar Trivy para escaneo de vulnerabilidades
+        run: trivy fs --scanners vuln,secret,misconfig .</code></pre>
+        <p class="code-caption">
+          .github/workflows/shared--sca-generic.yml · escanea vulnerabilidades, secrets y misconfigurations.
+        </p>
+        <aside class="notes">
+          (1 min) Esto es real, está en `develop`. Un solo workflow reusable, container fijado a
+          Trivy 0.70.0 (versión inmutable), tres scanners en una pasada — vulnerabilidades,
+          secretos, misconfigurations. Cualquier repo de aplicación lo invoca con `workflow_call`.
+          Lo importante no es Trivy en sí — es que la plantilla es reusable y los tres equipos
+          la consumen igual.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 9 — CD: cuando el merge se vuelve deploy (Fase 1)
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>CD · cuando el merge se vuelve deploy</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow); margin-bottom: 0.4em;">
+          Lo que viene en Fase 1 · ADR-CICD-0003 · ADR-INFRA-0005 · ADR-CICD-0008.
+        </p>
+
+        <div class="flow-pipeline">
+          <div class="flow-step fragment fade-up">
+            <span class="flow-num">1</span>
+            <i class="flow-icon fa-solid fa-code-merge"></i>
+            <h4 class="flow-title">Merge a la rama</h4>
+            <p><code>develop</code> · <code>release/*</code> · <code>main</code><br /><small style="opacity:0.75;">solo <code>main</code> con protección y required reviewers</small></p>
+          </div>
+          <div class="flow-step fragment fade-up">
+            <span class="flow-num">2</span>
+            <i class="flow-icon fa-solid fa-box-archive"></i>
+            <h4 class="flow-title">Build empaquetado</h4>
+            <p>Next.js bundle · Lambda zip · librería versionada</p>
+          </div>
+          <div class="flow-step fragment fade-up">
+            <span class="flow-num">3</span>
+            <i class="flow-icon fa-solid fa-key"></i>
+            <h4 class="flow-title">OIDC a AWS</h4>
+            <p>Sin secretos largos · token efímero por workflow</p>
+          </div>
+          <div class="flow-step flow-step--final fragment fade-up">
+            <span class="flow-num">4</span>
+            <i class="flow-icon fa-solid fa-rocket"></i>
+            <h4 class="flow-title">Deploy con CDK / SAM</h4>
+            <p>Al ambiente que la rama indica</p>
+          </div>
+        </div>
+
+        <div class="fragment fade-in" style="margin-top: 0.6em; padding: 0.7em 1em; background: rgba(252,165,165,0.10); border-left: 4px solid #fca5a5; border-radius: 0 var(--border-radius) var(--border-radius) 0;">
+          <p style="font-size: 0.78em; line-height: 1.45; margin: 0; color: rgba(255,255,255,0.95);">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #fca5a5; margin-right: 0.4em;"></i>
+            <strong>Hoy esto no está construido.</strong>
+            Es la Fase 1 que arranca cuando se firme OIDC (ADR-INFRA-0005). Sin esa firma,
+            cada deploy seguiría dependiendo de credenciales largas en secretos de GitHub.
+          </p>
+        </div>
+
+        <aside class="notes">
+          (1 min 30 s) Esto es la otra mitad. CI valida — CD despliega. Cuando un merge entra a
+          una rama de integración (develop, release o main), el pipeline empaqueta el artefacto:
+          bundle de Next.js para el frontend, zip de Lambda para el backend, librería versionada
+          para data. Aclaro: la única rama con protección formal y required reviewers es main —
+          develop y release tienen checks de CI pero no bloqueo por revisor. Después se autentica
+          contra AWS con OIDC: sin secretos largos en GitHub, solo un token efímero por ejecución
+          del workflow. Y finalmente despliega con CDK o SAM al ambiente que la rama indica —
+          develop a DEV, release a STG, main a PROD. Hoy nada de esto está construido. Es lo
+          primero que vamos a levantar en Fase 1, y el desbloqueo crítico es firmar OIDC.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 10 — Infra: AWS con CDK + SAM
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Infraestructura · AWS con CDK + SAM</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow);">
+          Una sola cuenta · aislamiento por IAM y tags · ADR-INFRA-0001 (Aceptado).
+        </p>
+        <div class="arch-grid">
+          <div class="arch-col fragment fade-up">
+            <div class="arch-col-header arch-col-header--fe">
+              <i class="fa-brands fa-react"></i>
+              <span>Frontend</span>
+            </div>
+            <div class="arch-box">
+              <i class="fa-solid fa-display"></i>
+              <span>Next.js SSG</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-cube"></i>
+              <span>Amazon S3</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-globe"></i>
+              <span>CloudFront</span>
+            </div>
+          </div>
+          <div class="arch-col fragment fade-up">
+            <div class="arch-col-header arch-col-header--be">
+              <i class="fa-brands fa-node-js"></i>
+              <span>Backend</span>
+            </div>
+            <div class="arch-box">
+              <i class="fa-solid fa-code"></i>
+              <span>Node + TypeScript</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-box-archive"></i>
+              <span>AWS SAM</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-bolt"></i>
+              <span>Lambda</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-network-wired"></i>
+              <span>API Gateway</span>
+            </div>
+          </div>
+          <div class="arch-col fragment fade-up">
+            <div class="arch-col-header arch-col-header--data">
+              <i class="fa-solid fa-database"></i>
+              <span>Data</span>
+            </div>
+            <div class="arch-box">
+              <i class="fa-solid fa-cubes"></i>
+              <span>skorify-data lib</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-database"></i>
+              <span>RDS PostgreSQL</span>
+            </div>
+            <div class="arch-box arch-box--aws">
+              <i class="fa-solid fa-envelope-open-text"></i>
+              <span>SQS + DLQ <small>(H10)</small></span>
+            </div>
+          </div>
+        </div>
+        <p class="code-caption">
+          Frontend → S3 + CloudFront · Backend → Lambda + API Gateway · Data → RDS + SQS/DLQ ·
+          región <strong>us-east-1</strong>.
+        </p>
+        <div class="fragment fade-in" style="margin-top: 0.8em; padding: 0.7em 1em; background: rgba(34,197,94,0.10); border-left: 4px solid #4ade80; border-radius: 0 var(--border-radius) var(--border-radius) 0;">
+          <p style="font-size: 0.78em; line-height: 1.45; margin: 0; color: rgba(255,255,255,0.95);">
+            <i class="fa-solid fa-screwdriver-wrench" style="color: #4ade80; margin-right: 0.4em;"></i>
+            <strong>Próximo paso:</strong>
+            el equipo de Infra extiende los módulos de IaC.
+            Pronto van a ver recursos reales corriendo en development.
+          </p>
+        </div>
+        <aside class="notes">
+          (1 min 30 s) Esta es la arquitectura objetivo. Una sola cuenta AWS, todo en us-east-1,
+          por costo y simplicidad (somos comunidad, no empresa). Aislamiento por IAM y tags, no
+          por cuentas separadas. CDK en TypeScript para infra y frontend; SAM en YAML para
+          backend porque encaja con el monolito Iraca. Data ya empezó a tocar SQS y DLQ en su
+          historia H10 — sí, Data está haciendo infra de verdad. Y el compromiso del equipo de
+          Infra (Mateo): extender los módulos que ya tenemos —S3 y networking— para que pronto
+          podamos ver recursos reales corriendo en development. Esa es la siguiente pieza para
+          llegar a staging el 23 de mayo.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 11 — Tres ambientes · tres cuentas
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Tres ambientes · tres cuentas</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow); margin-bottom: 0.4em;">
+          GitFlow define la rama · la rama decide el ambiente.<br />
+          <span style="opacity: 0.75;">ADR-CICD-0002 · ADR-CICD-0003 · ADR-INFRA-0002.</span>
+        </p>
+
+        <div class="branch-map fragment fade-in">
+          <div class="branch-map-row">
+            <code class="branch-name">develop</code>
+            <i class="fa-solid fa-arrow-right branch-arrow"></i>
+            <span class="branch-env branch-env--dev">DEV</span>
+            <span class="branch-trigger">push automático</span>
+          </div>
+          <div class="branch-map-row">
+            <code class="branch-name">release/*</code>
+            <i class="fa-solid fa-arrow-right branch-arrow"></i>
+            <span class="branch-env branch-env--stg">STG</span>
+            <span class="branch-trigger">aprobación manual</span>
+          </div>
+          <div class="branch-map-row">
+            <code class="branch-name">main</code>
+            <i class="fa-solid fa-arrow-right branch-arrow"></i>
+            <span class="branch-env branch-env--prod">PROD</span>
+            <span class="branch-trigger">required reviewers</span>
+          </div>
+          <div class="branch-map-row">
+            <code class="branch-name">hotfix/*</code>
+            <i class="fa-solid fa-arrow-right branch-arrow"></i>
+            <span class="branch-env branch-env--prod">PROD</span>
+            <span class="branch-trigger">flujo acelerado</span>
+          </div>
+        </div>
+
+        <p class="callout-line fragment fade-in" style="margin-top: 0.8em;">
+          Cuenta AWS por ambiente · región <strong>us-east-1</strong> · aislamiento por frontera de cuenta.
+        </p>
+
+        <aside class="notes">
+          (1 min 30 s) Esta slide conecta dos cosas que la audiencia ya conoce por separado: git
+          y ambientes. La regla es simple — GitFlow define las ramas, y cada rama decide a qué
+          ambiente despliega. Develop va a DEV automático, ahí experimentamos. Release ramas
+          van a STG con aprobación manual para validar. Main solo entra a PROD con required
+          reviewers. Hotfix tiene su propio carril acelerado a PROD. Tres ambientes, una cuenta
+          AWS por ambiente bajo la OU Skorify (DEV, STG, PROD), región us-east-1, aislamiento
+          por frontera de cuenta. Hoy nada de esto está construido — son los stacks que vamos a
+          levantar en Fase 1 junto con OIDC. La importancia de cerrar los ADR-0002 y 0003 está
+          en que sin esto, cada equipo va a inventar su propia convención de ramas.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 12 — SRE: Datadog
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>SRE · Datadog como plataforma única</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow);">
+          Una sola plataforma para logs · métricas · traces · audit.
+          ADR-SRE-0001 (Aceptado).
+        </p>
+        <div class="cols-2" style="margin-top: 1em;">
+          <div class="fragment fade-right">
+            <h3><span class="badge aceptado">MVP</span> Fase 1</h3>
+            <ul style="font-size: 0.85em; line-height: 1.6;">
+              <li>Logs estructurados JSON desde día uno</li>
+              <li>Métricas de aplicación e infraestructura</li>
+              <li>Traces APM en Lambda + frontend</li>
+              <li>CloudTrail audit ingerido</li>
+            </ul>
+          </div>
+          <div class="fragment fade-left">
+            <h3><span class="badge fase2">Fase 2</span> Operación</h3>
+            <ul style="font-size: 0.85em; line-height: 1.6;">
+              <li>SLOs por servicio</li>
+              <li>RUM (Real User Monitoring)</li>
+              <li>Synthetic monitoring</li>
+              <li>Alertas + on-call rotativo</li>
+              <li>Runbooks accionables</li>
+            </ul>
+          </div>
+        </div>
+        <div class="fragment fade-up" style="margin-top: 0.9em; padding: 0.7em 1em; background: rgba(232,121,249,0.10); border-left: 4px solid var(--accent-pink); border-radius: 0 var(--border-radius) var(--border-radius) 0;">
+          <p style="font-size: 0.82em; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.95);">
+            <i class="fa-solid fa-bullhorn" style="color: var(--accent-pink); margin-right: 0.4em;"></i>
+            <strong>Llamado a los tres equipos:</strong>
+            no aceptamos <code>console.log</code> en código que va a producción.
+            Sirve para debug local. No para software robusto.
+            <strong>Logs estructurados JSON desde la primera línea.</strong>
+          </p>
+        </div>
+        <aside class="notes">
+          (1 min 30 s) Datadog es deliberado: si los estudiantes salen del proyecto y entran a
+          industria, ya saben la herramienta más adoptada. Empezamos chiquito —logs, métricas,
+          traces— y crecemos a SLOs y on-call cuando haya tráfico real. Pero hay un mensaje
+          directo para los tres equipos: no quiero ver `console.log` en código que va a
+          producción. Console.log sirve mientras debuggeas en tu máquina, no cuando un servicio
+          falla a las 3 AM y necesitas correlacionar request_id, trace_id y user_id en Datadog.
+          La diferencia entre debug y software robusto es ahí. Logs estructurados JSON desde la
+          primera línea — Pino, Winston o Powertools, lo definimos en el ADR-SRE-0003.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 13 — Infra ya tiene código (módulo S3)
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Infraestructura ya tiene código</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow);">
+          Módulo S3 en CDK TypeScript · configurable por SSM Parameter Store · sin tocar código.
+        </p>
+<pre><code class="language-typescript">export interface S3BucketDefinition {
+  /** ID lógico único dentro del módulo (CDK Construct ID). */
+  readonly logicalName: string;
+
+  /** Nombre físico del bucket en AWS. */
+  readonly bucketName: string;
+
+  /** Habilitar versionado de objetos. */
+  readonly versioned: boolean;
+
+  /** Tipo de cifrado del bucket. */
+  readonly encryptionType: 'S3_MANAGED' | 'KMS_MANAGED' | 'CUSTOMER_MANAGED';
+
+  /** Alias KMS · requerido cuando encryptionType = 'CUSTOMER_MANAGED'. */
+  readonly kmsAlias?: string;
+
+  /** Bucket destino para server access logs (otro bucket de este módulo). */
+  readonly serverAccessLogsTargetName?: string;
+
+  /** Días para transición a S3 Intelligent Tiering. */
+  readonly lifecycleTransitionDays?: number;
+
+  // Agregar un nuevo bucket = agregar un elemento al array en SSM,
+  // sin tocar código del módulo.
+}</code></pre>
+        <p class="code-caption">
+          lib/modules/s3/main.ts · 493 líneas · 275 de tests · módulo networking en camino.
+        </p>
+        <aside class="notes">
+          (1 min 15 s) Esto es CDK serio. El módulo no decide qué bucket crear — recibe la lista
+          desde SSM Parameter Store. Agregar un bucket = un cambio en SSM, no un deploy de código.
+          Eso baja la fricción para los equipos de aplicación. Y ya hay 275 líneas de tests
+          unitarios. La sintetización CDK ya genera CloudFormation: `cdk.out/SkorifyInfra-Dev`
+          existe en el repo.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 14 — Devcontainer
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Devcontainer · onboarding en 5 minutos</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow);">
+          Un solo "Reopen in Container" → Node 18 + AWS CLI + CDK + SSO listos.
+        </p>
+        <div class="cols-2">
+          <div>
+<pre><code class="language-json">{
+  "name": "Skorify Infraestructura",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {}
+  },
+  "postCreateCommand":
+    "npm install -g aws-cdk && npm install",
+  "postAttachCommand":
+    "bash -lc './.devcontainer/scripts/setup-credentials.sh'"
+}</code></pre>
+          </div>
+          <div style="font-size: 0.85em; line-height: 1.55;">
+            <h3>Lo que hace al adjuntarse</h3>
+            <ul>
+              <li>Instala <code>aws-cdk</code> global + dependencias</li>
+              <li>Configura SSO contra <code>aws-users-groups-manizales</code></li>
+              <li>Valida sesión con <code>sts get-caller-identity</code></li>
+              <li>Si falta, ejecuta <code>aws sso login</code></li>
+              <li>Bootstrap automático de <code>CDKToolkit</code></li>
+              <li>Extensiones VS Code: AWS Toolkit · Prettier · ESLint</li>
+            </ul>
+            <p class="footnote" style="margin-top: 0.8em;">
+              <strong>Mateo (@Mateo454)</strong> y <strong>Michael (@lmichaelrc)</strong>
+              guían al equipo en este flujo.
+            </p>
+          </div>
+        </div>
+        <aside class="notes">
+          (1 min 15 s) Esto es lo que más impacto tiene en el día a día de los estudiantes.
+          Antes: descargar Node, instalar CDK, configurar AWS CLI, pedir permisos SSO,
+          equivocarse de región, perder dos horas. Ahora: clonar, "Reopen in Container", listo.
+          Si alguien tiene dudas con AWS o CDK, Mateo y Michael son los puntos de contacto. El
+          script `setup-credentials.sh` también bootstrappea CDKToolkit si falta — el primer
+          deploy real del estudiante "simplemente funciona".
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 15 — Estado actual + adopción cruzada
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>El estado actual</h2>
+        <p style="font-size: 0.82em; color: var(--primary-glow);">
+          Hoy los equipos ya están subiendo código · la columna vertebral está moviendo a los repos.
+        </p>
+
+        <h3 class="fragment fade-in" style="margin-top: 0.8em; font-size: 0.9em;">Volumen de actividad</h3>
+        <div class="card-grid">
+          <div class="card fragment fade-up">
+            <span class="num">47</span>
+            <span class="label">Frontend</span>
+            <p class="desc">PRs · 17 ramas</p>
+          </div>
+          <div class="card fragment fade-up">
+            <span class="num">41</span>
+            <span class="label">Backend</span>
+            <p class="desc">PRs · 17 ramas</p>
+          </div>
+          <div class="card fragment fade-up">
+            <span class="num">19</span>
+            <span class="label">Data</span>
+            <p class="desc">ramas · H01–H10</p>
+          </div>
+        </div>
+
+        <h3 class="fragment fade-in" style="margin-top: 1em; font-size: 0.9em;">Adopción cruzada del contrato</h3>
+        <div class="card-grid">
+          <div class="card accent fragment fade-up">
+            <span class="label">Frontend</span>
+            <p style="font-size: 0.85em; margin-top: 0.4em;">
+              Ya implementa el workflow de validación.
+              <strong>Adopción voluntaria.</strong>
+            </p>
+          </div>
+          <div class="card accent fragment fade-up">
+            <span class="label">Data</span>
+            <p style="font-size: 0.85em; margin-top: 0.4em;">
+              Historia H10: SQS, DLQ e IAM en AWS, antes de que Infra termine.
+            </p>
+          </div>
+          <div class="card accent fragment fade-up">
+            <span class="label">DevOps</span>
+            <p style="font-size: 0.85em; margin-top: 0.4em;">
+              8 ramas en paralelo · CDK synth corriendo · composite actions listas.
+            </p>
+          </div>
+        </div>
+
+        <p class="fragment fade-in" style="margin-top: 1em; font-size: 0.78em; color: var(--primary-glow); text-align: center; padding: 0.6em 1em; background: rgba(139,92,246,0.08); border-radius: 10px; border: 1px dashed rgba(139,92,246,0.3);">
+          <i class="fa-solid fa-circle-info" style="margin-right: 0.4em;"></i>
+          Estos números son <strong>conservadores</strong>: el equipo está trabajando más de lo que el repo remoto refleja.
+          Algunos miembros todavía resolviendo auth con HTTPS, así que hay ramas en local pendientes de push.
+        </p>
+
+        <aside class="notes">
+          (1 min 45 s) Esta slide es la que importa. Arriba ven el volumen: hoy los tres equipos ya
+          están subiendo código de verdad — más de cien pull requests entre los tres, 53 ramas
+          activas. Esto NO existía cuando empezamos. Y abajo la prueba de que las decisiones
+          funcionan: Frontend no tenía obligación de adoptar el workflow de validación, lo hicieron
+          porque el contrato era claro y útil. Data ya hace SQS, DLQ e IAM en su sandbox antes de
+          que terminemos los stacks. La columna vertebral dejó de ser teoría hace semanas. Algo
+          importante: estos números son conservadores. El equipo está trabajando más de lo que
+          el remoto refleja — varios miembros aún resolviendo auth con HTTPS y tienen ramas en
+          local pendientes de push. Eso lo destrabamos esta semana.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 16 — Hoja de ruta · tres fases
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Hoja de ruta · tres fases</h2>
+        <div class="timeline">
+          <div class="phase active fragment fade-up">
+            <p class="when">Fase 0 · Hoy</p>
+            <h3>Decidir + bootstrap</h3>
+            <ul>
+              <li>28 ADRs documentados</li>
+              <li>Composite actions y workflows</li>
+              <li>Módulo S3 CDK + tests</li>
+              <li>Devcontainer + SSO + CDK bootstrap</li>
+              <li>Adopción cruzada en FE y Data</li>
+            </ul>
+          </div>
+          <div class="phase fragment fade-up">
+            <p class="when">Fase 1 · 23 de mayo</p>
+            <h3>Staging desplegado</h3>
+            <ul>
+              <li>OIDC GitHub → AWS firmado</li>
+              <li>CDK deploys reales en DEV y STG</li>
+              <li>SAM backend en Lambda · STG</li>
+              <li>Datadog ingiriendo logs desde el día 0</li>
+              <li>Los tres equipos usando las plantillas</li>
+              <li>Pre-commit estandarizado (ADR-CICD-0010)</li>
+            </ul>
+          </div>
+          <div class="phase next fragment fade-up">
+            <p class="when">Fase 2 · 11 de junio</p>
+            <h3>Producción</h3>
+            <ul>
+              <li>Deploy a PROD con required reviewers</li>
+              <li>Rollback ensayado al menos una vez</li>
+              <li>Flujo hotfix probado</li>
+              <li>Alertas mínimas en Datadog</li>
+              <li>SLOs iniciales por servicio</li>
+            </ul>
+          </div>
+        </div>
+        <p class="footnote">
+          Dos fechas duras · 24 días para STG · 43 días para PROD.
+        </p>
+        <aside class="notes">
+          (1 min 30 s) Esto ya no son fases conceptuales — son fechas duras. Fase 0 cierra esta
+          semana. El 23 de mayo tenemos que tener algo desplegado al menos en staging: eso
+          significa OIDC firmado, CDK haciendo deploys reales a DEV y STG, backend en Lambda,
+          Datadog ingiriendo logs desde el primer commit. El 11 de junio es la fecha límite de
+          despliegue a producción — no negociable. Eso son 24 días para staging y 43 días para
+          producción contando desde hoy. Lo bloqueante hoy es OIDC y la decisión sobre Datadog.
+          Si esos dos no se destraban en los próximos días, el 23 de mayo se nos pasa.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 17 — Lo que falta · sin maquillaje
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Lo que falta · sin maquillaje</h2>
+        <p style="font-size: 0.95em; line-height: 1.4; margin-top: 0.6em; color: rgba(255,255,255,0.92);">
+          Si me detuviera aquí, esta charla sería propaganda.
+          <strong style="color: var(--accent-pink);">Lo que duele también es parte del avance.</strong>
+        </p>
+
+        <div class="cols-2" style="margin-top: 1em;">
+          <div class="fragment fade-up">
+            <h3 style="font-size: 1em; color: var(--accent-pink);">Lo que decidimos pero no cerramos</h3>
+            <ul style="font-size: 0.82em; line-height: 1.6;">
+              <li>
+                <strong>22 de 28 ADRs siguen en estado Propuesto.</strong>
+                Decidir no es firmar, y tenemos firmas pendientes en cosas críticas:
+                OIDC, secrets, naming, branching.
+              </li>
+              <li>
+                <strong>Husky vs <code>pre-commit</code> sigue abierto</strong> (ADR-CICD-0010).
+                Mientras dudemos, el frontend usa Husky y backend/data no usan nada.
+                <em>La inacción es la decisión por defecto.</em>
+              </li>
+            </ul>
+          </div>
+          <div class="fragment fade-up">
+            <h3 style="font-size: 1em; color: var(--accent-pink);">Lo que nos toca decidir entre todos</h3>
+            <ul style="font-size: 0.82em; line-height: 1.6;">
+              <li>
+                <strong>Datadog vs CloudWatch</strong> (ADR-SRE-0005).
+                Lo revisamos con los líderes en los próximos días: destrabar Datadog,
+                o decidir arrancar con CloudWatch.
+                La meta es tener observabilidad desde el despliegue 0.
+              </li>
+              <li>
+                <strong>Sin OIDC, no hay deploy automatizado.</strong>
+                Hoy no hemos hecho el primer despliegue ni siquiera en development.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="fragment fade-up" style="margin-top: 1em; padding: 0.8em 1.2em; background: rgba(239,68,68,0.10); border-left: 4px solid #fca5a5; border-radius: 0 var(--border-radius) var(--border-radius) 0;">
+          <p style="font-size: 0.78em; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.95);">
+            <strong style="color: #fca5a5;">La autocrítica más fuerte:</strong>
+            el backend tiene 17 ramas y varias llevan el nombre de quien las creó.
+            El contrato existe, pero ese equipo todavía no lo siente como suyo.
+            <strong>Eso no se arregla con un workflow; se arregla con conversación.</strong>
+          </p>
+        </div>
+
+        <aside class="notes">
+          (1 min 45 s) Pausa. Hasta aquí pinté un cuadro bonito. Voy a romper el cuadro.
+          Tenemos 22 ADRs sin firmar — eso significa que el 79% de las decisiones técnicas
+          siguen abiertas. Y aquí va el dato más crudo: hoy no hemos hecho el primer despliegue,
+          ni siquiera en development. Sin OIDC no hay pipeline a AWS. Sobre observabilidad: lo
+          vamos a revisar con los líderes en los próximos días, decidimos si destrabamos Datadog
+          o arrancamos con CloudWatch. La meta es la misma: que el primer log estructurado
+          aparezca el mismo día que el primer deploy. El más doloroso: el backend tiene ramas
+          con nombres de personas. Eso me
+          dice que el contrato que firmamos lo siente como suyo el frontend, lo siente como suyo
+          data, pero backend todavía no. Esa conversación me toca a mí, no la resuelve un
+          workflow. Si los estudiantes están escuchando: lo más valioso que pueden hacer esta
+          semana es decirle a un líder de área qué ADR todavía no entienden.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 18 — Lecciones de liderazgo
+      ====================================================== -->
+      <section data-background-color="#1b1f30">
+        <h2>Lo que aprendí liderando</h2>
+        <ul class="lessons">
+          <li class="fragment fade-up">"Decidir explícitamente reduce reuniones."</li>
+          <li class="fragment fade-up">"Los ADRs son contratos sociales más que técnicos."</li>
+          <li class="fragment fade-up">"Coordinar tres áreas requiere tres lenguajes."</li>
+          <li class="fragment fade-up">"Velocidad sin columna vertebral pone en riesgo la coherencia."</li>
+          <li class="fragment fade-up">"El mejor onboarding es un devcontainer que funciona."</li>
+        </ul>
+        <p class="footnote fragment fade-in">
+          Mayoría del equipo son estudiantes en su primer proyecto.
+          Decidir bien es enseñar bien.
+        </p>
+        <aside class="notes">
+          (1 min 30 s) Les comparto las cinco lecciones más caras. La primera me costó tres
+          reuniones evitables — desde que escribí el primer ADR, las decisiones se cierran por
+          texto. La cuarta me la enseñó el backend cuando vi 17 ramas activas: sin un contrato
+          común, la velocidad termina costando coherencia. La quinta se la robo a Mateo y Michael:
+          el devcontainer es lo que más impacto tuvo en el equipo de Data.
+        </aside>
+      </section>
+
+      <!-- =====================================================
+           SLIDE 19 — Cierre
+      ====================================================== -->
+      <section class="hero" data-background-color="#1b1f30">
+        <h1 style="font-size: 2.6em;">El camino sigue.</h1>
+        <p class="lead">Los siguientes 28 ADRs ya empiezan.</p>
+        <div style="margin-top: 1.6em; display: flex; flex-direction: column; align-items: center; gap: 0.8em;">
+          <a href="https://github.com/aws-ug-manizales/Skorify_DevOps/tree/main/docs/adr"
+             style="font-size: 0.85em; color: var(--primary-glow); text-decoration: none; border-bottom: 1px dashed var(--primary-light); letter-spacing: 0.04em;"
+             target="_blank" rel="noopener">
+            <i class="fa-brands fa-github" style="margin-right: 0.4em;"></i>
+            github.com/aws-ug-manizales/Skorify_DevOps/tree/main/docs/adr
+          </a>
+          <div style="display: flex; justify-content: center; gap: 2em; flex-wrap: wrap; margin-top: 0.4em;">
+            <span class="meta">
+              <i class="fa-solid fa-comments"></i>&nbsp; Q&amp;A
+            </span>
+            <span class="meta">
+              <i class="fa-solid fa-handshake-angle"></i>&nbsp; @Mateo454 · @lmichaelrc · @steevensmelo
+            </span>
+          </div>
+        </div>
+        <p class="meta" style="margin-top: 3em; font-size: 0.78em;">
+          Gracias · @edisoncast · Líder DevOps Skorify
+        </p>
+        <aside class="notes">
+          (45 s + Q&A) Cierro: el camino sigue. Lo que hicimos en Fase 0 no es la meta, es la columna vertebral
+          que sostiene Fase 1 y Fase 2. Las preguntas las respondemos entre los cuatro líderes. Si
+          quieren contribuir a un ADR, hablen con el área correspondiente. Gracias.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- reveal.js core + plugins (UMD globals) -->
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/plugin/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/plugin/notes.js"></script>
+
+  <script src="js/slides-init.js"></script>
+</body>
+</html>

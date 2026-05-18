@@ -6,6 +6,8 @@
 - **Autores**: @lmichaelrc (Michael Rivera)
 - **Aprobadores**: @lmichaelrc, @steevensmelo, @Mateo454, @edisoncast
 
+> **Nota (2026-05-09)**: el contexto original asume que los tres ambientes corren en una sola cuenta AWS. Ese supuesto cambió con ADR-INFRA-0002 (cuenta por ambiente bajo la OU `Skorify`). La decisión de usar Datadog y el modelo de señales (logs, métricas, traces, audit) **siguen vigentes**; lo que cambia son los aspectos operativos derivados de la topología, principalmente CloudTrail y Datadog cross account (sin asumir centralización todavía: la centralización de logs en una cuenta dedicada queda diferida en ADR-INFRA-0011, decisión por tomar en un ADR SRE de seguimiento). No se edita este documento porque está aceptado.
+
 ## Contexto
 
 El proyecto Skorify necesita observabilidad sobre tres ambientes que corren en una sola cuenta AWS, con frontend (Next.js SSG en S3+CloudFront), backend (Lambda+API Gateway) y eventualmente data (PostgreSQL). El equipo necesita ver:

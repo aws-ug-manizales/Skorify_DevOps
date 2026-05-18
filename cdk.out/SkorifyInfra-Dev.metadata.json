@@ -1,0 +1,1312 @@
+{
+  "/SkorifyInfra-Dev": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "/workspaces/skorify-infraestructura/lib/main.ts:20: (/workspaces/skorify-infraestructura/lib/main.ts:20:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    },
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Environment",
+          "value": "Dev"
+        },
+        {
+          "key": "ManagedBy",
+          "value": "AWS CDK"
+        },
+        {
+          "key": "Project",
+          "value": "Skorify_Infraestructura"
+        }
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Custom::VpcRestrictDefaultSGCustomResourceProvider": [
+    {
+      "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+      "data": true
+    }
+  ],
+  "/SkorifyInfra-Dev/Custom::S3AutoDeleteObjectsCustomResourceProvider": [
+    {
+      "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+      "data": true
+    }
+  ],
+  "/SkorifyInfra-Dev/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "ipAddresses": "*",
+        "maxAzs": "*",
+        "natGateways": "*",
+        "subnetConfiguration": [
+          {
+            "cidrMask": "*",
+            "name": "*",
+            "subnetType": "Public"
+          },
+          {
+            "cidrMask": "*",
+            "name": "*",
+            "subnetType": "Private"
+          },
+          {
+            "cidrMask": "*",
+            "name": "*",
+            "subnetType": "Isolated"
+          }
+        ]
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AccessLogsBucket": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "bucketName": "*",
+        "removalPolicy": "retain",
+        "autoDeleteObjects": false,
+        "encryption": "S3_MANAGED",
+        "enforceSSL": true,
+        "blockPublicAccess": "*",
+        "versioned": true,
+        "objectOwnership": "ObjectWriter",
+        "accessControl": "LogDeliveryWrite",
+        "lifecycleRules": [
+          {
+            "id": "*",
+            "enabled": true,
+            "abortIncompleteMultipartUploadAfter": "*"
+          }
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addLifecycleRule": [
+          {
+            "id": "*",
+            "enabled": true,
+            "abortIncompleteMultipartUploadAfter": "*"
+          },
+          "*",
+          "*"
+        ]
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucketKey": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "alias": "*",
+        "enableKeyRotation": true,
+        "removalPolicy": "retain"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "bucketName": "*",
+        "removalPolicy": "destroy",
+        "autoDeleteObjects": true,
+        "encryption": "KMS",
+        "encryptionKey": "*",
+        "bucketKeyEnabled": true,
+        "enforceSSL": true,
+        "blockPublicAccess": "*",
+        "versioned": true,
+        "eventBridgeEnabled": true,
+        "objectOwnership": "BucketOwnerEnforced",
+        "serverAccessLogsBucket": "*",
+        "serverAccessLogsPrefix": "*",
+        "lifecycleRules": [
+          {
+            "id": "*",
+            "enabled": true,
+            "prefix": "*",
+            "abortIncompleteMultipartUploadAfter": "*",
+            "transitions": "*"
+          },
+          {
+            "id": "*",
+            "enabled": true,
+            "prefix": "*",
+            "abortIncompleteMultipartUploadAfter": "*",
+            "transitions": "*"
+          }
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addLifecycleRule": [
+          {
+            "id": "*",
+            "enabled": true,
+            "prefix": "*",
+            "abortIncompleteMultipartUploadAfter": "*",
+            "transitions": "*"
+          },
+          "*",
+          "*"
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addLifecycleRule": [
+          {
+            "id": "*",
+            "enabled": true,
+            "prefix": "*",
+            "abortIncompleteMultipartUploadAfter": "*",
+            "transitions": "*"
+          },
+          "*",
+          "*"
+        ]
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "assumedBy": {
+          "principalAccount": "*",
+          "assumeRoleAction": "*"
+        }
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addManagedPolicy": [
+          {
+            "managedPolicyArn": "*"
+          }
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addToPrincipalPolicy": [
+          {}
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "attachInlinePolicy": [
+          "*"
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "attachInlinePolicy": [
+          "*"
+        ]
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpc6B5E6F44"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": true,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": true,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {}
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addNatGateway": [
+          "*"
+        ]
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet2": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": true,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": true,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {}
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet1": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {}
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet2": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {}
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet1": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet2": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "availabilityZone": "*",
+        "vpcId": "*",
+        "cidrBlock": "*",
+        "mapPublicIpOnLaunch": false,
+        "ipv6CidrBlock": "*",
+        "assignIpv6AddressOnCreation": "*"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIGW21218DAB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcVPCGW12E561D8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/RestrictDefaultSecurityGroupCustomResource": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": "*"
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AccessLogsBucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAccessLogsBucket18A30BF8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "S3Module.createAccessLogsBucket (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:187:12)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:44:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AccessLogsBucket/Policy": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "bucket": "*"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucketKey/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAssetsBucketKey7A40F766"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Key2 in aws-cdk-lib...",
+        "S3Module.resolveBucketEncryption (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:260:21)",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:68: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:68:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucketKey/Alias": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "aliasName": "*",
+        "targetKey": "*"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAssetsBucket7BA5DD5F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    },
+    {
+      "type": "aws:cdk:analytics:mixin",
+      "data": {
+        "mixin": "aws-cdk-lib.aws_s3.mixins.BucketAutoDeleteObjects"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket/Policy": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": {
+        "bucket": "*"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket/AutoDeleteObjectsCustomResource": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": "*"
+    }
+  ],
+  "/SkorifyInfra-Dev/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy": [
+    {
+      "type": "aws:cdk:analytics:construct",
+      "data": "*"
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "attachToRole": [
+          "*"
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "attachToRole": [
+          "*"
+        ]
+      }
+    },
+    {
+      "type": "aws:cdk:analytics:method",
+      "data": {
+        "addStatements": [
+          {}
+        ]
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet1Subnet918289EE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:255 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet1RouteTable8FB3C18A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:255 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet1RouteTableAssociationD13830EA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:255 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet1DefaultRoute80C01FA6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:195 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1/EIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet1EIP7D5353EC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet1/NATGateway": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet1NATGateway70EEEC07"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet2Subnet9D9E5AFB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:255 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet2RouteTable22886677"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:255 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet2RouteTableAssociation2D4CEA06"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:255 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PublicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPublicSubnet2DefaultRouteDF98F60F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:195 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet1Subnet717BCE48"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet1RouteTable69CC9A73"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet1RouteTableAssociation761725EA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet1DefaultRouteDE58E6A0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet2Subnet4313381B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet2RouteTableAE92CE40"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet2RouteTableAssociation9EFBB61D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:257 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/PrivateSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcPrivateSubnet2DefaultRoute5BF16047"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIsolatedSubnet1SubnetF9149FFB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:259 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIsolatedSubnet1RouteTableC1A370EF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:259 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIsolatedSubnet1RouteTableAssociation263773ED"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:259 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIsolatedSubnet2SubnetF4F8A552"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:259 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIsolatedSubnet2RouteTable605185F4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:259 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/IsolatedSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcIsolatedSubnet2RouteTableAssociationB634B7D9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../workspaces/skorify-infraestructura/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:259 in aws-cdk-lib...",
+        "Array.forEach (:)",
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/Networking/Vpc/RestrictDefaultSecurityGroupCustomResource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "NetworkingVpcRestrictDefaultSecurityGroupCustomResourceF3A61192"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in aws-cdk-lib...",
+        "new NetworkingModule (/workspaces/skorify-infraestructura/lib/modules/networking/main.ts:23:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:46: (/workspaces/skorify-infraestructura/lib/main.ts:46:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AccessLogsBucket/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAccessLogsBucketPolicyB7196D24"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "S3Module.createAccessLogsBucket (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:187:12)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:44:16)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucketKey/Alias/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAssetsBucketKeyAlias67CFD8DF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Key2 in aws-cdk-lib...",
+        "S3Module.resolveBucketEncryption (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:260:21)",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:68: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:68:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAssetsBucketPolicy4E7885D4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    },
+    {
+      "type": "aws:cdk:analytics:mixin",
+      "data": {
+        "mixin": "aws-cdk-lib.aws_s3.mixins.BucketPolicyStatements"
+      }
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket/AutoDeleteObjectsCustomResource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAssetsBucketAutoDeleteObjectsCustomResource70DA87B9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/S3Storage/AssetsBucket/Notifications/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "S3StorageAssetsBucketNotifications7CB53B5E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/SkorifyInfra-Dev/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71: (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:71:3)",
+        "Array.reduce (:)",
+        "new S3Module (/workspaces/skorify-infraestructura/lib/modules/s3/main.ts:53:34)",
+        "/workspaces/skorify-infraestructura/lib/main.ts:52: (/workspaces/skorify-infraestructura/lib/main.ts:52:2)",
+        "Array.forEach (:)",
+        "<anonymous> (/workspaces/skorify-infraestructura/lib/main.ts:13:14)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ]
+}
