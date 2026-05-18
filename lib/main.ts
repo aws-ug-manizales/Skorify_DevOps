@@ -2,12 +2,15 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { loadConfigFromSSM } from './config/ssm-reader';
+import { getVpcModulePropsFromEnv } from './config/networking-env';
 import { S3Module } from './modules/s3/main';
+import { VpcModule } from './modules/vpc/main';
 import { maybeCreateSkorifyOrganizationStack } from './modules/organizations/stack';
 import { maybeCreateSkorifyBootstrapStack } from './modules/iam/oidc-and-roles/stack';
 
 const app = new cdk.App();
 const environmentName = process.env.SKORIFY_ENVIRONMENT ?? 'dev';
+const enableNetworking = (process.env.SKORIFY_ENABLE_NETWORKING ?? 'true').toLowerCase() === 'true';
 
 // ==========================================
 // Skorify CDK App: configuración desde Parameter Store
@@ -58,6 +61,15 @@ if (config.s3Buckets.length > 0) {
   new S3Module(envStack, 'S3Storage', {
     buckets: config.s3Buckets,
   });
+}
+/**
+ * Módulo de VPC: parámetros de red para la VPC privada.
+ * 
+ * Inicializa la red privada base (VPC, subnets y rutas) para que otros módulos desplieguen recursos internos.
+ * 
+ */
+if (enableNetworking) {
+  new VpcModule(envStack, 'Network', getVpcModulePropsFromEnv());
 }
 
 // ==========================================
