@@ -110,5 +110,19 @@ export class VpcModule extends Construct {
       privateSubnetIds: privateSubnetResources.map((subnet) => subnet.ref),
       privateSubnetRouteTableIds: routeTableResources.map((routeTable) => routeTable.ref),
     });
+
+    // Interface Endpoint para Secrets Manager: permite a las lambdas dentro
+    // de la VPC privada llegar a la API de SM sin pasar por internet/NAT.
+    // Configurado en una sola AZ para ahorrar costo (~$7/mes vs ~$15/mes en 2 AZ).
+    this.vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+      subnets: { subnets: [this.privateSubnets[0]!] },
+    });
+
+    // Gateway Endpoint para DynamoDB: ruta en las route tables de la VPC.
+    // Es gratis (no cobra ni por hora ni por GB), no requiere ENIs ni SG.
+    this.vpc.addGatewayEndpoint('DynamoDbEndpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+    });
   }
 }
