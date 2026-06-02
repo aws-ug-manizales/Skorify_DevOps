@@ -42,7 +42,7 @@ export const GITHUB_ORG = 'aws-ug-manizales';
 
 /** Repos consumidores por dominio. */
 export const REPOS = {
-  paginaWeb: 'Pagina_Web',
+  paginaWeb: 'community-website',
   backend: 'Skorify_Backend',
   frontend: 'Skorify_Frontend',
   data: 'Skorify_Data',
