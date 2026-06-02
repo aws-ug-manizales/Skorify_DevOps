@@ -280,6 +280,78 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       actions: ['ssm:GetParameter'],
       resources: [`arn:aws:ssm:*:${accountId}:parameter/cdk-bootstrap/*`],
     }),
+    new iam.PolicyStatement({
+      sid: 'CognitoBackendUserPool',
+      // El template SAM crea el UserPool + Client + triggers (PreSignUp/
+      // PostConfirmation) y su dominio. CreateUserPool no admite scoping
+      // por ARN/nombre, así que el recurso es '*'.
+      actions: [
+        'cognito-idp:CreateUserPool',
+        'cognito-idp:DeleteUserPool',
+        'cognito-idp:UpdateUserPool',
+        'cognito-idp:DescribeUserPool',
+        'cognito-idp:GetUserPoolMfaConfig',
+        'cognito-idp:SetUserPoolMfaConfig',
+        'cognito-idp:CreateUserPoolClient',
+        'cognito-idp:UpdateUserPoolClient',
+        'cognito-idp:DeleteUserPoolClient',
+        'cognito-idp:DescribeUserPoolClient',
+        'cognito-idp:CreateUserPoolDomain',
+        'cognito-idp:DeleteUserPoolDomain',
+        'cognito-idp:DescribeUserPoolDomain',
+        'cognito-idp:TagResource',
+        'cognito-idp:UntagResource',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'Ec2SecurityGroupBackend',
+      // LambdaSecurityGroup + Lambdas en VPC. Los describe/create de EC2 no
+      // soportan scoping por nombre, así que el recurso es '*'.
+      actions: [
+        'ec2:CreateSecurityGroup',
+        'ec2:DeleteSecurityGroup',
+        'ec2:DescribeSecurityGroups',
+        'ec2:DescribeSecurityGroupRules',
+        'ec2:AuthorizeSecurityGroupIngress',
+        'ec2:AuthorizeSecurityGroupEgress',
+        'ec2:RevokeSecurityGroupIngress',
+        'ec2:RevokeSecurityGroupEgress',
+        'ec2:CreateTags',
+        'ec2:DeleteTags',
+        'ec2:DescribeVpcs',
+        'ec2:DescribeSubnets',
+        'ec2:DescribeNetworkInterfaces',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'BackendManagedPolicy',
+      // LambdaSharedPolicy (managed policy `skorify-dev-lambda-policy`).
+      actions: [
+        'iam:CreatePolicy',
+        'iam:DeletePolicy',
+        'iam:CreatePolicyVersion',
+        'iam:DeletePolicyVersion',
+        'iam:GetPolicy',
+        'iam:GetPolicyVersion',
+        'iam:ListPolicyVersions',
+        'iam:ListEntitiesForPolicy',
+        'iam:TagPolicy',
+        'iam:UntagPolicy',
+      ],
+      resources: [`arn:aws:iam::${accountId}:policy/skorify-dev-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SsmPlatformParamsRead',
+      // Parámetros de plataforma que el template resuelve al desplegar
+      // (db-secret-arn, data-bus-name, storage/buckets).
+      actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+      resources: [
+        `arn:aws:ssm:*:${accountId}:parameter/skorify/dev/*`,
+        `arn:aws:ssm:*:${accountId}:parameter/skorify/s3/*`,
+      ],
+    }),
   ];
 }
 
