@@ -202,6 +202,9 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
         'arn:aws:apigateway:*::/apis',
         'arn:aws:apigateway:*::/apis/*',
         'arn:aws:apigateway:*::/account',
+        // Custom domain (AWS::ApiGateway::DomainName) + base path mapping.
+        'arn:aws:apigateway:*::/domainnames',
+        'arn:aws:apigateway:*::/domainnames/*',
       ],
     }),
     new iam.PolicyStatement({
@@ -313,6 +316,16 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
         'cognito-idp:CreateUserPoolDomain',
         'cognito-idp:DeleteUserPoolDomain',
         'cognito-idp:DescribeUserPoolDomain',
+        // Identity provider federado (Google).
+        'cognito-idp:CreateIdentityProvider',
+        'cognito-idp:UpdateIdentityProvider',
+        'cognito-idp:DeleteIdentityProvider',
+        'cognito-idp:DescribeIdentityProvider',
+        // Grupos del pool (admins/managers).
+        'cognito-idp:CreateGroup',
+        'cognito-idp:GetGroup',
+        'cognito-idp:UpdateGroup',
+        'cognito-idp:DeleteGroup',
         'cognito-idp:TagResource',
         'cognito-idp:UntagResource',
       ],
