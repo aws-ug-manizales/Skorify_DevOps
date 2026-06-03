@@ -112,7 +112,7 @@ export function rolesForSkorifyAccount(
       repoName: REPOS.backend,
       subPatterns,
       description: `Deploy de Skorify backend (SAM: Lambda + API Gateway) en cuenta ${env}.`,
-      statements: skorifyBackendDeployStatements(accountId),
+      statements: skorifyBackendDeployStatements(accountId, env),
     },
     {
       logicalName: 'SkorifyFrontendDeploy',
