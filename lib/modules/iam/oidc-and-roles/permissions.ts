@@ -588,11 +588,20 @@ export function skorifyFrontendInfraStatements(accountId: string): iam.PolicySta
 export function skorifyDataDeployStatements(accountId: string): iam.PolicyStatement[] {
   return [
     new iam.PolicyStatement({
+      sid: 'AssumeCdkBootstrapRoles',
+      // cdk deploy con DefaultStackSynthesizer asume estos roles para
+      // lookups, publicación de assets y creación del changeset.
+      actions: ['sts:AssumeRole'],
+      resources: [`arn:aws:iam::${accountId}:role/cdk-hnb659fds-*-${accountId}-*`],
+    }),
+    new iam.PolicyStatement({
       sid: 'CloudFormationDataStacks',
       actions: ['cloudformation:*'],
       resources: [
-        `arn:aws:cloudformation:*:${accountId}:stack/skorify-data/*`,
-        `arn:aws:cloudformation:*:${accountId}:stack/skorify-data-*/*`,
+        // Stacks CDK del repo Skorify_Data (db + event-bridge) + el toolkit.
+        `arn:aws:cloudformation:*:${accountId}:stack/skorify-database-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/skorify-event-bridge-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/CDKToolkit/*`,
       ],
     }),
     new iam.PolicyStatement({
