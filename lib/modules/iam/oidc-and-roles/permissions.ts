@@ -379,6 +379,13 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
         `arn:aws:ssm:*:${accountId}:parameter/skorify/s3/*`,
       ],
     }),
+    new iam.PolicyStatement({
+      sid: 'SecretsManagerPlatformRead',
+      // El template resuelve {{resolve:secretsmanager:skorify/<env>/...}}
+      // (ej. google-client-secret) usando las credenciales del deploy.
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/dev/*`],
+    }),
   ];
 }
 
