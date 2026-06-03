@@ -19,12 +19,11 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm@10.12.1
 
-      # Lint type-aware (project: tsconfig.base.json): instala deps y compila
-      # domain/shared para resolver los tipos importados por server/.
+      # Lint type-aware (project: tsconfig.base.json): deps de raiz (eslint) y
+      # de server (incl. @skorify/* desde git) para resolver los tipos.
       - name: Install deps
         run: |
           pnpm install --no-frozen-lockfile
-          pnpm --dir server run build:deps
           pnpm --dir server install --no-frozen-lockfile
 
       - name: ESLint
