@@ -183,6 +183,13 @@ export function skorifyBackendDeployStatements(
       ],
     }),
     new iam.PolicyStatement({
+      sid: 'ServerlessTransform',
+      // SAM aplica el macro `AWS::Serverless-2016-10-31` via CreateChangeSet
+      // sobre el transform propiedad de AWS (no es un stack del backend).
+      actions: ['cloudformation:CreateChangeSet'],
+      resources: ['arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31'],
+    }),
+    new iam.PolicyStatement({
       sid: 'LambdaBackendFunctions',
       actions: ['lambda:*'],
       resources: [
