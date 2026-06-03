@@ -157,14 +157,21 @@ export function paginaWebInfraStatements(): iam.PolicyStatement[] {
  * `aws-ug-manizales/Skorify_Backend`:
  * - SAM templates con `AWS::Serverless::Function` (nodejs22.x) +
  *   `AWS::Serverless::Api`.
- * - El stack legacy `Skorify-Backend-DEV` fue desplegado desde una
- *   maquina local. El rol lo cubre explicitamente para que CI pueda
- *   adoptarlo sin renombrar el stack.
+ * - Cubre ambas convenciones de nombre: `skorify-backend-*` y
+ *   `Skorify-Backend-*` (p.ej. `Skorify-Backend-DEV`/`-PROD`).
+ * - Los recursos por entorno (SSM, Secrets, managed policy) se acotan a
+ *   `skorify/<env>/*` segun la cuenta (dev/prod).
  * - Comunicación inter-lambda vía `LambdaClient.InvokeCommand`.
  * - Sin SQS/SNS/EventBridge/DynamoDB todavía. Cuando aparezcan en el
  *   código, refinar este set en un PR aparte.
  */
-export function skorifyBackendDeployStatements(accountId: string): iam.PolicyStatement[] {
+export function skorifyBackendDeployStatements(
+  accountId: string,
+  env: string,
+): iam.PolicyStatement[] {
+  // El backend nombra sus recursos por entorno `dev`/`prod` (SSM, secrets,
+  // managed policy), mientras DevOps usa los codigos `dev`/`stg`/`prd`.
+  const platformEnv: string = { dev: 'dev', stg: 'staging', prd: 'prod' }[env] ?? env;
   return [
     new iam.PolicyStatement({
       sid: 'CloudFormationBackendStacks',
@@ -172,7 +179,7 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       resources: [
         `arn:aws:cloudformation:*:${accountId}:stack/skorify-backend/*`,
         `arn:aws:cloudformation:*:${accountId}:stack/skorify-backend-*/*`,
-        `arn:aws:cloudformation:*:${accountId}:stack/Skorify-Backend-DEV/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/Skorify-Backend-*/*`,
       ],
     }),
     new iam.PolicyStatement({
@@ -180,11 +187,11 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       actions: ['lambda:*'],
       resources: [
         `arn:aws:lambda:*:${accountId}:function:skorify-backend-*`,
-        `arn:aws:lambda:*:${accountId}:function:Skorify-Backend-DEV-*`,
+        `arn:aws:lambda:*:${accountId}:function:Skorify-Backend-*`,
         `arn:aws:lambda:*:${accountId}:layer:skorify-backend-*`,
         `arn:aws:lambda:*:${accountId}:layer:skorify-backend-*:*`,
-        `arn:aws:lambda:*:${accountId}:layer:Skorify-Backend-DEV-*`,
-        `arn:aws:lambda:*:${accountId}:layer:Skorify-Backend-DEV-*:*`,
+        `arn:aws:lambda:*:${accountId}:layer:Skorify-Backend-*`,
+        `arn:aws:lambda:*:${accountId}:layer:Skorify-Backend-*:*`,
         `arn:aws:lambda:*:${accountId}:event-source-mapping:*`,
       ],
     }),
@@ -222,12 +229,12 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       resources: [
         `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/skorify-backend-*`,
         `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/skorify-backend-*:*`,
-        `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/Skorify-Backend-DEV-*`,
-        `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/Skorify-Backend-DEV-*:*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/Skorify-Backend-*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/Skorify-Backend-*:*`,
         `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/skorify-backend-*`,
         `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/skorify-backend-*:*`,
-        `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/Skorify-Backend-DEV-*`,
-        `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/Skorify-Backend-DEV-*:*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/Skorify-Backend-*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/Skorify-Backend-*:*`,
       ],
     }),
     new iam.PolicyStatement({
@@ -278,7 +285,7 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       ],
       resources: [
         `arn:aws:iam::${accountId}:role/skorify-backend-*`,
-        `arn:aws:iam::${accountId}:role/Skorify-Backend-DEV-*`,
+        `arn:aws:iam::${accountId}:role/Skorify-Backend-*`,
       ],
     }),
     new iam.PolicyStatement({
@@ -354,7 +361,7 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
     }),
     new iam.PolicyStatement({
       sid: 'BackendManagedPolicy',
-      // LambdaSharedPolicy (managed policy `skorify-dev-lambda-policy`).
+      // LambdaSharedPolicy/AuthLambdasSharedPolicy (`skorify-<env>-*-policy`).
       actions: [
         'iam:CreatePolicy',
         'iam:DeletePolicy',
@@ -367,7 +374,7 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
         'iam:TagPolicy',
         'iam:UntagPolicy',
       ],
-      resources: [`arn:aws:iam::${accountId}:policy/skorify-dev-*`],
+      resources: [`arn:aws:iam::${accountId}:policy/skorify-${platformEnv}-*`],
     }),
     new iam.PolicyStatement({
       sid: 'SsmPlatformParamsRead',
@@ -375,7 +382,7 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       // (db-secret-arn, data-bus-name, storage/buckets).
       actions: ['ssm:GetParameter', 'ssm:GetParameters'],
       resources: [
-        `arn:aws:ssm:*:${accountId}:parameter/skorify/dev/*`,
+        `arn:aws:ssm:*:${accountId}:parameter/skorify/${platformEnv}/*`,
         `arn:aws:ssm:*:${accountId}:parameter/skorify/s3/*`,
       ],
     }),
@@ -384,7 +391,7 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       // El template resuelve {{resolve:secretsmanager:skorify/<env>/...}}
       // (ej. google-client-secret) usando las credenciales del deploy.
       actions: ['secretsmanager:GetSecretValue'],
-      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/dev/*`],
+      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/${platformEnv}/*`],
     }),
   ];
 }
