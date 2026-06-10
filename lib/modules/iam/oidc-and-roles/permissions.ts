@@ -253,6 +253,21 @@ export function skorifyBackendDeployStatements(
       },
     }),
     new iam.PolicyStatement({
+      sid: 'CloudWatchAlarmsBackend',
+      // Ciclo de vida de AWS::CloudWatch::Alarm en los stacks del backend
+      // (crear/actualizar, leer y borrar en rollbacks o remociones).
+      actions: [
+        'cloudwatch:PutMetricAlarm',
+        'cloudwatch:DescribeAlarms',
+        'cloudwatch:DeleteAlarms',
+        'cloudwatch:TagResource',
+      ],
+      resources: [
+        `arn:aws:cloudwatch:*:${accountId}:alarm:skorify-backend-*`,
+        `arn:aws:cloudwatch:*:${accountId}:alarm:Skorify-Backend-*`,
+      ],
+    }),
+    new iam.PolicyStatement({
       sid: 'XRayBackend',
       actions: [
         'xray:PutTraceSegments',
