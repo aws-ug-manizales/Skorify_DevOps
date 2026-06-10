@@ -342,6 +342,9 @@ export function skorifyBackendDeployStatements(
         'cognito-idp:DeleteGroup',
         'cognito-idp:TagResource',
         'cognito-idp:UntagResource',
+        // Resource server + scopes M2M.
+        'cognito-idp:CreateResourceServer',
+        'cognito-idp:DeleteResourceServer',
       ],
       resources: ['*'],
     }),
@@ -387,7 +390,12 @@ export function skorifyBackendDeployStatements(
       sid: 'SsmPlatformParamsRead',
       // Parámetros de plataforma que el template resuelve al desplegar
       // (db-secret-arn, data-bus-name, storage/buckets).
-      actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+      actions: [
+        'ssm:GetParameter',
+        'ssm:GetParameters',
+        'ssm:PutParameter',
+        'ssm:DeleteParameter',
+      ],
       resources: [
         `arn:aws:ssm:*:${accountId}:parameter/skorify/${platformEnv}/*`,
         `arn:aws:ssm:*:${accountId}:parameter/skorify/s3/*`,
@@ -398,6 +406,18 @@ export function skorifyBackendDeployStatements(
       // El template resuelve {{resolve:secretsmanager:skorify/<env>/...}}
       // (ej. google-client-secret) usando las credenciales del deploy.
       actions: ['secretsmanager:GetSecretValue'],
+      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/${platformEnv}/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SecretsManagerPlatformCreate',
+      // Crear secretos en el gestor de secretos.
+      actions: [
+        'secretsmanager:CreateSecret',
+        'secretsmanager:UpdateSecret',
+        'secretsmanager:TagResource',
+        'secretsmanager:UntagResource',
+        'secretsmanager:DeleteSecret',
+      ],
       resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/${platformEnv}/*`],
     }),
   ];
