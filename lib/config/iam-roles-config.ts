@@ -42,7 +42,7 @@ export const GITHUB_ORG = 'aws-ug-manizales';
 
 /** Repos consumidores por dominio. */
 export const REPOS = {
-  paginaWeb: 'Pagina_Web',
+  paginaWeb: 'community-website',
   backend: 'Skorify_Backend',
   frontend: 'Skorify_Frontend',
   data: 'Skorify_Data',
@@ -112,7 +112,7 @@ export function rolesForSkorifyAccount(
       repoName: REPOS.backend,
       subPatterns,
       description: `Deploy de Skorify backend (SAM: Lambda + API Gateway) en cuenta ${env}.`,
-      statements: skorifyBackendDeployStatements(accountId),
+      statements: skorifyBackendDeployStatements(accountId, env),
     },
     {
       logicalName: 'SkorifyFrontendDeploy',
