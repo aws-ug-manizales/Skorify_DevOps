@@ -157,11 +157,21 @@ export function paginaWebInfraStatements(): iam.PolicyStatement[] {
  * `aws-ug-manizales/Skorify_Backend`:
  * - SAM templates con `AWS::Serverless::Function` (nodejs22.x) +
  *   `AWS::Serverless::Api`.
+ * - Cubre ambas convenciones de nombre: `skorify-backend-*` y
+ *   `Skorify-Backend-*` (p.ej. `Skorify-Backend-DEV`/`-PROD`).
+ * - Los recursos por entorno (SSM, Secrets, managed policy) se acotan a
+ *   `skorify/<env>/*` segun la cuenta (dev/prod).
  * - Comunicación inter-lambda vía `LambdaClient.InvokeCommand`.
  * - Sin SQS/SNS/EventBridge/DynamoDB todavía. Cuando aparezcan en el
  *   código, refinar este set en un PR aparte.
  */
-export function skorifyBackendDeployStatements(accountId: string): iam.PolicyStatement[] {
+export function skorifyBackendDeployStatements(
+  accountId: string,
+  env: string,
+): iam.PolicyStatement[] {
+  // El backend nombra sus recursos por entorno `dev`/`prod` (SSM, secrets,
+  // managed policy), mientras DevOps usa los codigos `dev`/`stg`/`prd`.
+  const platformEnv: string = { dev: 'dev', stg: 'staging', prd: 'prod' }[env] ?? env;
   return [
     new iam.PolicyStatement({
       sid: 'CloudFormationBackendStacks',
@@ -169,15 +179,26 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       resources: [
         `arn:aws:cloudformation:*:${accountId}:stack/skorify-backend/*`,
         `arn:aws:cloudformation:*:${accountId}:stack/skorify-backend-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/Skorify-Backend-*/*`,
       ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'ServerlessTransform',
+      // SAM aplica el macro `AWS::Serverless-2016-10-31` via CreateChangeSet
+      // sobre el transform propiedad de AWS (no es un stack del backend).
+      actions: ['cloudformation:CreateChangeSet'],
+      resources: ['arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31'],
     }),
     new iam.PolicyStatement({
       sid: 'LambdaBackendFunctions',
       actions: ['lambda:*'],
       resources: [
         `arn:aws:lambda:*:${accountId}:function:skorify-backend-*`,
+        `arn:aws:lambda:*:${accountId}:function:Skorify-Backend-*`,
         `arn:aws:lambda:*:${accountId}:layer:skorify-backend-*`,
         `arn:aws:lambda:*:${accountId}:layer:skorify-backend-*:*`,
+        `arn:aws:lambda:*:${accountId}:layer:Skorify-Backend-*`,
+        `arn:aws:lambda:*:${accountId}:layer:Skorify-Backend-*:*`,
         `arn:aws:lambda:*:${accountId}:event-source-mapping:*`,
       ],
     }),
@@ -195,6 +216,9 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
         'arn:aws:apigateway:*::/apis',
         'arn:aws:apigateway:*::/apis/*',
         'arn:aws:apigateway:*::/account',
+        // Custom domain (AWS::ApiGateway::DomainName) + base path mapping.
+        'arn:aws:apigateway:*::/domainnames',
+        'arn:aws:apigateway:*::/domainnames/*',
       ],
     }),
     new iam.PolicyStatement({
@@ -212,8 +236,12 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       resources: [
         `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/skorify-backend-*`,
         `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/skorify-backend-*:*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/Skorify-Backend-*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/lambda/Skorify-Backend-*:*`,
         `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/skorify-backend-*`,
         `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/skorify-backend-*:*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/Skorify-Backend-*`,
+        `arn:aws:logs:*:${accountId}:log-group:/aws/apigateway/Skorify-Backend-*:*`,
       ],
     }),
     new iam.PolicyStatement({
@@ -223,6 +251,21 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       conditions: {
         StringEquals: { 'cloudwatch:namespace': ['Skorify/Backend'] },
       },
+    }),
+    new iam.PolicyStatement({
+      sid: 'CloudWatchAlarmsBackend',
+      // Ciclo de vida de AWS::CloudWatch::Alarm en los stacks del backend
+      // (crear/actualizar, leer y borrar en rollbacks o remociones).
+      actions: [
+        'cloudwatch:PutMetricAlarm',
+        'cloudwatch:DescribeAlarms',
+        'cloudwatch:DeleteAlarms',
+        'cloudwatch:TagResource',
+      ],
+      resources: [
+        `arn:aws:cloudwatch:*:${accountId}:alarm:skorify-backend-*`,
+        `arn:aws:cloudwatch:*:${accountId}:alarm:Skorify-Backend-*`,
+      ],
     }),
     new iam.PolicyStatement({
       sid: 'XRayBackend',
@@ -262,7 +305,10 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
         'iam:UntagRole',
         'iam:PassRole',
       ],
-      resources: [`arn:aws:iam::${accountId}:role/skorify-backend-*`],
+      resources: [
+        `arn:aws:iam::${accountId}:role/skorify-backend-*`,
+        `arn:aws:iam::${accountId}:role/Skorify-Backend-*`,
+      ],
     }),
     new iam.PolicyStatement({
       sid: 'SsmBackendParameters',
@@ -279,6 +325,115 @@ export function skorifyBackendDeployStatements(accountId: string): iam.PolicySta
       sid: 'SsmBootstrapRead',
       actions: ['ssm:GetParameter'],
       resources: [`arn:aws:ssm:*:${accountId}:parameter/cdk-bootstrap/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'CognitoBackendUserPool',
+      // El template SAM crea el UserPool + Client + triggers (PreSignUp/
+      // PostConfirmation) y su dominio. CreateUserPool no admite scoping
+      // por ARN/nombre, así que el recurso es '*'.
+      actions: [
+        'cognito-idp:CreateUserPool',
+        'cognito-idp:DeleteUserPool',
+        'cognito-idp:UpdateUserPool',
+        'cognito-idp:DescribeUserPool',
+        'cognito-idp:GetUserPoolMfaConfig',
+        'cognito-idp:SetUserPoolMfaConfig',
+        'cognito-idp:CreateUserPoolClient',
+        'cognito-idp:UpdateUserPoolClient',
+        'cognito-idp:DeleteUserPoolClient',
+        'cognito-idp:DescribeUserPoolClient',
+        'cognito-idp:CreateUserPoolDomain',
+        'cognito-idp:DeleteUserPoolDomain',
+        'cognito-idp:DescribeUserPoolDomain',
+        // Identity provider federado (Google).
+        'cognito-idp:CreateIdentityProvider',
+        'cognito-idp:UpdateIdentityProvider',
+        'cognito-idp:DeleteIdentityProvider',
+        'cognito-idp:DescribeIdentityProvider',
+        // Grupos del pool (admins/managers).
+        'cognito-idp:CreateGroup',
+        'cognito-idp:GetGroup',
+        'cognito-idp:UpdateGroup',
+        'cognito-idp:DeleteGroup',
+        'cognito-idp:TagResource',
+        'cognito-idp:UntagResource',
+        // Resource server + scopes M2M.
+        'cognito-idp:CreateResourceServer',
+        'cognito-idp:DeleteResourceServer',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'Ec2SecurityGroupBackend',
+      // LambdaSecurityGroup + Lambdas en VPC. Los describe/create de EC2 no
+      // soportan scoping por nombre, así que el recurso es '*'.
+      actions: [
+        'ec2:CreateSecurityGroup',
+        'ec2:DeleteSecurityGroup',
+        'ec2:DescribeSecurityGroups',
+        'ec2:DescribeSecurityGroupRules',
+        'ec2:AuthorizeSecurityGroupIngress',
+        'ec2:AuthorizeSecurityGroupEgress',
+        'ec2:RevokeSecurityGroupIngress',
+        'ec2:RevokeSecurityGroupEgress',
+        'ec2:CreateTags',
+        'ec2:DeleteTags',
+        'ec2:DescribeVpcs',
+        'ec2:DescribeSubnets',
+        'ec2:DescribeNetworkInterfaces',
+      ],
+      resources: ['*'],
+    }),
+    new iam.PolicyStatement({
+      sid: 'BackendManagedPolicy',
+      // LambdaSharedPolicy/AuthLambdasSharedPolicy (`skorify-<env>-*-policy`).
+      actions: [
+        'iam:CreatePolicy',
+        'iam:DeletePolicy',
+        'iam:CreatePolicyVersion',
+        'iam:DeletePolicyVersion',
+        'iam:GetPolicy',
+        'iam:GetPolicyVersion',
+        'iam:ListPolicyVersions',
+        'iam:ListEntitiesForPolicy',
+        'iam:TagPolicy',
+        'iam:UntagPolicy',
+      ],
+      resources: [`arn:aws:iam::${accountId}:policy/skorify-${platformEnv}-*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SsmPlatformParamsRead',
+      // Parámetros de plataforma que el template resuelve al desplegar
+      // (db-secret-arn, data-bus-name, storage/buckets).
+      actions: [
+        'ssm:GetParameter',
+        'ssm:GetParameters',
+        'ssm:PutParameter',
+        'ssm:DeleteParameter',
+      ],
+      resources: [
+        `arn:aws:ssm:*:${accountId}:parameter/skorify/${platformEnv}/*`,
+        `arn:aws:ssm:*:${accountId}:parameter/skorify/s3/*`,
+      ],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SecretsManagerPlatformRead',
+      // El template resuelve {{resolve:secretsmanager:skorify/<env>/...}}
+      // (ej. google-client-secret) usando las credenciales del deploy.
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/${platformEnv}/*`],
+    }),
+    new iam.PolicyStatement({
+      sid: 'SecretsManagerPlatformCreate',
+      // Crear secretos en el gestor de secretos.
+      actions: [
+        'secretsmanager:CreateSecret',
+        'secretsmanager:UpdateSecret',
+        'secretsmanager:TagResource',
+        'secretsmanager:UntagResource',
+        'secretsmanager:DeleteSecret',
+      ],
+      resources: [`arn:aws:secretsmanager:*:${accountId}:secret:skorify/${platformEnv}/*`],
     }),
   ];
 }
@@ -468,11 +623,20 @@ export function skorifyFrontendInfraStatements(accountId: string): iam.PolicySta
 export function skorifyDataDeployStatements(accountId: string): iam.PolicyStatement[] {
   return [
     new iam.PolicyStatement({
+      sid: 'AssumeCdkBootstrapRoles',
+      // cdk deploy con DefaultStackSynthesizer asume estos roles para
+      // lookups, publicación de assets y creación del changeset.
+      actions: ['sts:AssumeRole'],
+      resources: [`arn:aws:iam::${accountId}:role/cdk-hnb659fds-*-${accountId}-*`],
+    }),
+    new iam.PolicyStatement({
       sid: 'CloudFormationDataStacks',
       actions: ['cloudformation:*'],
       resources: [
-        `arn:aws:cloudformation:*:${accountId}:stack/skorify-data/*`,
-        `arn:aws:cloudformation:*:${accountId}:stack/skorify-data-*/*`,
+        // Stacks CDK del repo Skorify_Data (db + event-bridge) + el toolkit.
+        `arn:aws:cloudformation:*:${accountId}:stack/skorify-database-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/skorify-event-bridge-*/*`,
+        `arn:aws:cloudformation:*:${accountId}:stack/CDKToolkit/*`,
       ],
     }),
     new iam.PolicyStatement({

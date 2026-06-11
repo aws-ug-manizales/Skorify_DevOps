@@ -325,6 +325,44 @@ describe('iam-roles-config: matriz de roles', () => {
     ]);
   });
 
+  const backendResourcesFor = (accountId: string, env: 'dev' | 'stg' | 'prd') => {
+    const roles = rolesForSkorifyAccount(accountId, env);
+    const backend = roles.find((r) => r.roleName === 'skorify-backend-deploy')!;
+    const json = backend.statements.map((s) => s.toStatementJson() as { Sid?: string; Resource: string | string[] });
+    return (sid: string) => {
+      const statement = json.find((s) => s.Sid === sid)!;
+      return Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource];
+    };
+  };
+
+  test('skorify-backend-deploy cubre ambas convenciones de nombre (skorify-backend-* y Skorify-Backend-*)', () => {
+    const resourcesFor = backendResourcesFor('968306633562', 'dev');
+    expect(resourcesFor('CloudFormationBackendStacks')).toContain(
+      'arn:aws:cloudformation:*:968306633562:stack/Skorify-Backend-*/*',
+    );
+    expect(resourcesFor('LambdaBackendFunctions')).toContain(
+      'arn:aws:lambda:*:968306633562:function:Skorify-Backend-*',
+    );
+    expect(resourcesFor('BackendLogs')).toContain(
+      'arn:aws:logs:*:968306633562:log-group:/aws/lambda/Skorify-Backend-*',
+    );
+    expect(resourcesFor('BackendIamRoles')).toContain(
+      'arn:aws:iam::968306633562:role/Skorify-Backend-*',
+    );
+  });
+
+  test('skorify-backend-deploy acota SSM/Secrets/policy al entorno (dev) y mapea prd->prod', () => {
+    const dev = backendResourcesFor('968306633562', 'dev');
+    expect(dev('SsmPlatformParamsRead')).toContain('arn:aws:ssm:*:968306633562:parameter/skorify/dev/*');
+    expect(dev('SecretsManagerPlatformRead')).toContain('arn:aws:secretsmanager:*:968306633562:secret:skorify/dev/*');
+    expect(dev('BackendManagedPolicy')).toContain('arn:aws:iam::968306633562:policy/skorify-dev-*');
+
+    const prd = backendResourcesFor('151646410766', 'prd');
+    expect(prd('SsmPlatformParamsRead')).toContain('arn:aws:ssm:*:151646410766:parameter/skorify/prod/*');
+    expect(prd('SecretsManagerPlatformRead')).toContain('arn:aws:secretsmanager:*:151646410766:secret:skorify/prod/*');
+    expect(prd('BackendManagedPolicy')).toContain('arn:aws:iam::151646410766:policy/skorify-prod-*');
+  });
+
   test('skorify-frontend-deploy es assets-only; skorify-frontend-infra gestiona la infra', () => {
     const roles = rolesForSkorifyAccount('968306633562', 'dev');
     const deploy = roles.find((r) => r.roleName === 'skorify-frontend-deploy')!;
