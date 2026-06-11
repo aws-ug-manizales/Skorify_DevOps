@@ -9,7 +9,7 @@ import { maybeCreateSkorifyOrganizationStack } from './modules/organizations/sta
 import { maybeCreateSkorifyBootstrapStack } from './modules/iam/oidc-and-roles/stack';
 
 const app = new cdk.App();
-const environmentName = process.env.SKORIFY_ENVIRONMENT ?? 'dev';
+const environmentName = process.env.SKORIFY_ENVIRONMENT ?? 'produccion';
 const enableNetworking = (process.env.SKORIFY_ENABLE_NETWORKING ?? 'true').toLowerCase() === 'true';
 
 // ==========================================
@@ -100,3 +100,4 @@ maybeCreateSkorifyOrganizationStack(app, {
 maybeCreateSkorifyBootstrapStack(app, {
   currentAccount: process.env.CDK_DEFAULT_ACCOUNT,
 });
+	
