@@ -312,12 +312,13 @@ describe('iam-roles-config: matriz de roles', () => {
     expect(cfResArns.every((r: string) => r.startsWith('arn:aws:cloudfront::'))).toBe(true);
   });
 
-  test('rolesForSkorifyAccount produce los 6 roles del dominio', () => {
+  test('rolesForSkorifyAccount produce los 7 roles del dominio', () => {
     const roles = rolesForSkorifyAccount('968306633562', 'dev');
     const names = roles.map((r) => r.roleName).sort();
     expect(names).toEqual([
       'skorify-backend-deploy',
       'skorify-data-deploy',
+      'skorify-data-infra',
       'skorify-frontend-deploy',
       'skorify-frontend-infra',
       'skorify-infra-deploy',
@@ -429,6 +430,38 @@ describe('iam-roles-config: matriz de roles', () => {
     expect(ops.subPatterns).toEqual(['ref:refs/heads/*']);
   });
 
+  test('skorify-data-infra usa sub por environment y tiene AssumeCdkBootstrapRoles', () => {
+    for (const [account, env] of Object.entries(SKORIFY_ACCOUNT_TO_ENV)) {
+      const roles = rolesForSkorifyAccount(account, env);
+      const infra = roles.find((r) => r.roleName === 'skorify-data-infra')!;
+      expect(infra.subPatterns).toEqual([`environment:${env}`]);
+      expect(infra.repoName).toBe(REPOS.data);
+
+      const json = infra.statements.map((s) => s.toStatementJson() as { Sid?: string; Action: string | string[]; Resource: string | string[] });
+      const sids = json.map((s) => s.Sid);
+      expect(sids).toEqual(
+        expect.arrayContaining([
+          'AssumeCdkBootstrapRoles',
+          'CloudFormationDataInfraStacks',
+          'CdkAssetsDataInfra',
+          'IamDataInfraRoles',
+          'RdsDataInfraManage',
+          'SecretsManagerDataInfra',
+          'LambdaDataInfra',
+          'EventBridgeDataInfra',
+          'SqsDataInfra',
+          'StepFunctionsDataInfra',
+          'DynamoDbDataInfra',
+        ]),
+      );
+
+      // Asegura que asume los roles bootstrap de la cuenta correcta.
+      const assume = json.find((s) => s.Sid === 'AssumeCdkBootstrapRoles')!;
+      const resources = Array.isArray(assume.Resource) ? assume.Resource : [assume.Resource];
+      expect(resources).toEqual([`arn:aws:iam::${account}:role/cdk-hnb659fds-*-${account}-*`]);
+    }
+  });
+
   test('skorify-frontend-infra usa sub por environment, no por rama', () => {
     for (const [account, env] of Object.entries(SKORIFY_ACCOUNT_TO_ENV)) {
       const roles = rolesForSkorifyAccount(account, env);
@@ -518,7 +551,7 @@ describe('SkorifyBootstrapStack: materialización por cuenta activa', () => {
     expect(deployRoleNames(template, 'skorify-')).toEqual([]);
   });
 
-  test('en cada cuenta Skorify crea los 6 roles del dominio (sin pagina-web)', () => {
+  test('en cada cuenta Skorify crea los 7 roles del dominio (sin pagina-web)', () => {
     for (const [account, env] of Object.entries(SKORIFY_ACCOUNT_TO_ENV)) {
       const app = new cdk.App();
       const stack = maybeCreateSkorifyBootstrapStack(app, { currentAccount: account })!;
@@ -527,6 +560,7 @@ describe('SkorifyBootstrapStack: materialización por cuenta activa', () => {
       expect(deployRoleNames(template, 'skorify-')).toEqual([
         'skorify-backend-deploy',
         'skorify-data-deploy',
+        'skorify-data-infra',
         'skorify-frontend-deploy',
         'skorify-frontend-infra',
         'skorify-infra-deploy',

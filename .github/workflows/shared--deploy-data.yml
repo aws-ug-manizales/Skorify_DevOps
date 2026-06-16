@@ -1,0 +1,109 @@
+# =============================================================================
+# Workflow reusable: shared--deploy-data.yml
+# Llamado desde: Skorify_Data (pipelines de CI/CD del dominio data)
+#
+# Jobs:
+#   1. deploy-data-infra  — cdk deploy de skorifyDatabase + skorifyEventBridge.
+#      Usa el rol `skorify-data-infra` (trust: environment:<env>; requiere
+#      GitHub Environment con required reviewers en Skorify_Data).
+#   2. deploy-data-migrations — corre migrations Knex/TypeORM contra el RDS.
+#      Usa el rol `skorify-data-deploy` (trust: ref:refs/heads/<branch>).
+#      Solo se ejecuta si el job de infra termina exitosamente.
+#
+# Uso desde Skorify_Data:
+#   jobs:
+#     deploy:
+#       uses: aws-ug-manizales/Skorify_DevOps/.github/workflows/shared--deploy-data.yml@main
+#       with:
+#         environment: dev
+#
+# Owner: equipo CI/CD — @steevensmelo
+# Roles IAM: ADR-INFRA-0005 | permissions.ts: skorifyDataInfraStatements
+# =============================================================================
+
+name: "Shared: Deploy Data"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Ambiente destino (dev | stg | prd)."
+        required: true
+        type: string
+      node-version:
+        description: "Version de Node.js a utilizar."
+        required: false
+        default: "20"
+        type: string
+
+jobs:
+  deploy-data-infra:
+    name: CDK deploy — skorifyDatabase + skorifyEventBridge
+    runs-on: ubuntu-latest
+    # `environment` es obligatorio: la trust policy de `skorify-data-infra`
+    # exige el sub `repo:...:environment:<env>`. Sin esta declaracion el
+    # AssumeRole falla con AccessDenied.
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Configurar credenciales AWS
+        uses: aws-ug-manizales/Skorify_DevOps/actions/setup-aws-credentials@main
+        with:
+          environment: ${{ inputs.environment }}
+          domain: data-infra
+
+      - name: CDK deploy
+        run: npx cdk deploy skorifyDatabase skorifyEventBridge --require-approval never
+        env:
+          CDK_ENVIRONMENT: ${{ inputs.environment }}
+
+  deploy-data-migrations:
+    name: Migrations Knex/TypeORM contra RDS
+    runs-on: ubuntu-latest
+    needs: deploy-data-infra
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Configurar credenciales AWS
+        uses: aws-ug-manizales/Skorify_DevOps/actions/setup-aws-credentials@main
+        with:
+          environment: ${{ inputs.environment }}
+          domain: data
+
+      - name: Correr migrations
+        run: pnpm run migrate
+        env:
+          NODE_ENV: ${{ inputs.environment }}
